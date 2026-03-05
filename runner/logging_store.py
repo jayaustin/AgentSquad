@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any
 
 
 def _safe_segment(value: str) -> str:
@@ -25,6 +26,12 @@ def ensure_workspace(root: Path, role_id: str) -> Path:
     return workspace_dir
 
 
+def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, ensure_ascii=True) + "\n")
+
+
 def write_run_journal(
     root: Path,
     role_id: str,
@@ -36,6 +43,10 @@ def write_run_journal(
     backlog_before: str,
     backlog_after: str,
     events: list[str] | None = None,
+    event_type: str = "run_journal",
+    summary: str = "",
+    status: str = "",
+    metadata: dict[str, Any] | None = None,
 ) -> Path:
     workspace = ensure_workspace(root, role_id)
     runs_dir = workspace / "runs"
@@ -89,4 +100,27 @@ def write_run_journal(
     lines.append("")
 
     path.write_text("\n".join(lines), encoding="utf-8")
+
+    event_summary = str(summary or parsed_result.get("summary") or "Run journal written.").strip()
+    event_status = str(status or parsed_result.get("status") or "").strip()
+    run_path = path.relative_to(root).as_posix()
+    base_metadata: dict[str, Any] = {
+        "prompt_template": prompt_template,
+        "context_manifest": list(context_manifest),
+        "events": list(event_lines),
+    }
+    if metadata:
+        base_metadata.update(metadata)
+    payload = {
+        "ts_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "role_id": role_id,
+        "task_id": task_id,
+        "event_type": event_type,
+        "summary": event_summary,
+        "run_journal_path": run_path,
+        "status": event_status,
+        "metadata": base_metadata,
+    }
+    _append_jsonl(root / "project" / "state" / "activity-log.jsonl", payload)
+    _append_jsonl(workspace / "activity.jsonl", payload)
     return path

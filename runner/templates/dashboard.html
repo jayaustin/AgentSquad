@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AgentSquad Dashboard</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #121a2b;
+      --panel-2: #19243b;
+      --border: #263554;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --chip: #1f2a44;
+      --shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: radial-gradient(circle at top right, #16233d, #0b1220 50%);
+      color: var(--text);
+      font-family: "Segoe UI", "Trebuchet MS", sans-serif;
+      line-height: 1.5;
+    }
+    a {
+      color: #7dd3fc;
+    }
+    .app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+    .meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: right;
+    }
+    .top-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .top-tab {
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 8px 14px;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .top-tab.active {
+      background: #1e293b;
+      border-color: #3b82f6;
+      color: #dbeafe;
+    }
+    .tab-panel {
+      display: none;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(18, 26, 43, 0.9);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .tab-panel.active {
+      display: block;
+    }
+    .panel-pad {
+      padding: 14px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+    .card {
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .card h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+      color: #dbeafe;
+    }
+    .kv {
+      margin: 0;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 4px 10px;
+      font-size: 0.92rem;
+    }
+    .kv dt {
+      color: var(--muted);
+    }
+    .kv dd {
+      margin: 0;
+    }
+    .chip-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      background: var(--chip);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.82rem;
+    }
+    .split {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 0;
+      min-height: 560px;
+    }
+    .left-list {
+      border-right: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.7);
+      overflow: auto;
+      max-height: 80vh;
+    }
+    .left-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid #202c46;
+      color: var(--text);
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+    .left-item:hover,
+    .left-item.active {
+      background: rgba(59, 130, 246, 0.15);
+    }
+    .right-view {
+      padding: 12px;
+      overflow: auto;
+      max-height: 80vh;
+    }
+    .doc-path {
+      margin: 0 0 10px 0;
+      font-size: 0.84rem;
+      color: var(--muted);
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .controls input,
+    .controls select {
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 9px;
+      min-width: 180px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 7px 8px;
+      vertical-align: top;
+    }
+    th {
+      cursor: pointer;
+      background: #17233a;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      user-select: none;
+    }
+    tbody tr:nth-child(even) {
+      background: rgba(30, 41, 59, 0.35);
+    }
+    .table-wrap {
+      max-height: 75vh;
+      overflow: auto;
+    }
+    .timeline {
+      display: grid;
+      gap: 9px;
+    }
+    .event {
+      border: 1px solid var(--border);
+      background: #0f172a;
+      border-left-width: 5px;
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .event-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .event-role {
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #0b1220;
+    }
+    .event-time {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .event-summary {
+      margin: 0 0 5px 0;
+      font-size: 0.92rem;
+    }
+    .event-meta {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    .agent-layout {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      min-height: 560px;
+    }
+    .agent-tabs {
+      border-right: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.7);
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .agent-tab {
+      border: 1px solid var(--border);
+      background: #0f172a;
+      color: var(--text);
+      border-radius: 8px;
+      text-align: left;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+    .agent-tab.active {
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+      font-weight: 600;
+    }
+    .agent-panel {
+      padding: 12px;
+      overflow: auto;
+      max-height: 80vh;
+    }
+    .agent-header {
+      border: 1px solid var(--border);
+      border-left-width: 6px;
+      border-radius: 10px;
+      padding: 9px 10px;
+      margin-bottom: 12px;
+      background: #0f172a;
+    }
+    .agent-header h3 {
+      margin: 0;
+      font-size: 1rem;
+    }
+    .agent-section {
+      margin-bottom: 14px;
+    }
+    .agent-section h4 {
+      margin: 0 0 8px 0;
+      color: #dbeafe;
+    }
+    pre {
+      background: #0b1220;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      overflow: auto;
+    }
+    code {
+      font-family: Consolas, "Courier New", monospace;
+      background: #0b1220;
+      border-radius: 5px;
+      padding: 0 4px;
+    }
+    .empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+    @media (max-width: 980px) {
+      .split,
+      .agent-layout {
+        grid-template-columns: 1fr;
+      }
+      .left-list,
+      .agent-tabs {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        max-height: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <h1>AgentSquad Dashboard</h1>
+      <div class="meta" id="header-meta"></div>
+    </div>
+    <div class="top-tabs" id="top-tabs"></div>
+
+    <section class="tab-panel" id="tab-project">
+      <div class="panel-pad" id="project-content"></div>
+    </section>
+
+    <section class="tab-panel" id="tab-documents">
+      <div class="split">
+        <aside class="left-list" id="documents-list"></aside>
+        <article class="right-view" id="documents-view"></article>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-tasks">
+      <div class="panel-pad">
+        <div class="controls">
+          <input id="task-search" placeholder="Search tasks">
+          <select id="task-status-filter"></select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead id="tasks-head"></thead>
+            <tbody id="tasks-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-activity">
+      <div class="panel-pad">
+        <div class="timeline" id="activity-log"></div>
+      </div>
+    </section>
+
+    <section class="tab-panel" id="tab-agents">
+      <div class="agent-layout">
+        <aside class="agent-tabs" id="agent-tabs"></aside>
+        <div class="agent-panel" id="agent-panel"></div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const DATA = {{DASHBOARD_PAYLOAD_JSON}};
+
+    const TAB_DEFS = [
+      { id: "project", label: "Project" },
+      { id: "documents", label: "Documents" },
+      { id: "tasks", label: "Tasks" },
+      { id: "activity", label: "Activity Log" },
+      { id: "agents", label: "Agents" }
+    ];
+    const TASK_COLUMNS = ["task_id", "title", "description", "owner", "milestone", "status", "dependencies"];
+    const TASK_LABELS = {
+      task_id: "Task ID",
+      title: "Title",
+      description: "Description",
+      owner: "Owner",
+      milestone: "Milestone",
+      status: "Status",
+      dependencies: "Dependencies"
+    };
+
+    let activeTab = "project";
+    let activeDocId = null;
+    let activeAgentId = null;
+    let sortKey = "task_id";
+    let sortDir = "asc";
+
+    function esc(text) {
+      return String(text ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;");
+    }
+
+    function roleColor(roleId) {
+      return DATA.agent_colors[roleId] || "#60A5FA";
+    }
+
+    function tabButton(tab) {
+      const button = document.createElement("button");
+      button.className = "top-tab" + (activeTab === tab.id ? " active" : "");
+      button.textContent = tab.label;
+      button.onclick = () => {
+        activeTab = tab.id;
+        renderTabs();
+      };
+      return button;
+    }
+
+    function renderTabs() {
+      const tabsRoot = document.getElementById("top-tabs");
+      tabsRoot.innerHTML = "";
+      TAB_DEFS.forEach(tab => tabsRoot.appendChild(tabButton(tab)));
+      TAB_DEFS.forEach(tab => {
+        const panel = document.getElementById("tab-" + tab.id);
+        panel.classList.toggle("active", activeTab === tab.id);
+      });
+    }
+
+    function renderHeader() {
+      const meta = document.getElementById("header-meta");
+      const halted = DATA.project.state.halted ? "Yes" : "No";
+      const generated = DATA.generated_at_utc || "n/a";
+      meta.innerHTML = "Generated: <strong>" + esc(generated) + "</strong><br>Halted: <strong>" + esc(halted) + "</strong>";
+    }
+
+    function kvRow(label, value) {
+      return "<dt>" + esc(label) + "</dt><dd>" + esc(value) + "</dd>";
+    }
+
+    function chips(items) {
+      if (!items || !items.length) {
+        return '<span class="chip">None</span>';
+      }
+      return items.map(item => '<span class="chip">' + esc(item) + "</span>").join("");
+    }
+
+    function renderProject() {
+      const project = DATA.project;
+      const statusEntries = Object.entries(project.status_counts || {});
+      const statusChips = statusEntries.map(([key, value]) => key + ": " + value);
+      const html = [
+        '<div class="cards">',
+        '<section class="card"><h3>Project</h3><dl class="kv">',
+        kvRow("Project ID", project.id),
+        kvRow("Project Name", project.name),
+        kvRow("Primary Adapter", project.primary_adapter),
+        kvRow("Adapter Command", project.adapter_command),
+        kvRow("Session Mode", project.session_mode),
+        "</dl></section>",
+        '<section class="card"><h3>Execution</h3><dl class="kv">',
+        kvRow("Execution Mode", project.execution_mode),
+        kvRow("Handoff Authority", project.handoff_authority),
+        kvRow("Selection Policy", project.selection_policy),
+        kvRow("Enabled Roles", project.enabled_roles.length),
+        kvRow("Disabled Roles", project.disabled_roles.length),
+        "</dl></section>",
+        '<section class="card"><h3>Run State</h3><dl class="kv">',
+        kvRow("Run ID", project.state.run_id || "n/a"),
+        kvRow("Current Request", project.state.current_request || "n/a"),
+        kvRow("Active Role", project.state.active_role || "n/a"),
+        kvRow("Last Completed Task", project.state.last_completed_task_id || "n/a"),
+        kvRow("Halted", project.state.halted ? "Yes" : "No"),
+        kvRow("Halt Reason", project.state.halt_reason || "n/a"),
+        "</dl></section>",
+        '<section class="card"><h3>Backlog Status Counts</h3><div class="chip-list">',
+        chips(statusChips),
+        "</div></section>",
+        '<section class="card"><h3>Enabled Agents</h3><div class="chip-list">',
+        chips(project.enabled_roles),
+        "</div></section>",
+        '<section class="card"><h3>Disabled Agents</h3><div class="chip-list">',
+        chips(project.disabled_roles),
+        "</div></section>",
+        "</div>"
+      ].join("");
+      document.getElementById("project-content").innerHTML = html;
+    }
+
+    function renderDocuments() {
+      const docs = DATA.documents || [];
+      const list = document.getElementById("documents-list");
+      const view = document.getElementById("documents-view");
+      list.innerHTML = "";
+      if (!docs.length) {
+        list.innerHTML = '<div class="panel-pad empty">No documents found.</div>';
+        view.innerHTML = '<p class="empty">No included markdown documents matched dashboard filters.</p>';
+        return;
+      }
+      if (!activeDocId || !docs.some(doc => doc.id === activeDocId)) {
+        activeDocId = docs[0].id;
+      }
+      docs.forEach(doc => {
+        const button = document.createElement("button");
+        const primaryPrefix = doc.is_primary ? "Primary: " : "";
+        button.className = "left-item" + (doc.id === activeDocId ? " active" : "");
+        button.textContent = primaryPrefix + doc.title;
+        button.onclick = () => {
+          activeDocId = doc.id;
+          renderDocuments();
+        };
+        list.appendChild(button);
+      });
+
+      const active = docs.find(doc => doc.id === activeDocId) || docs[0];
+      view.innerHTML =
+        "<h2>" + esc(active.title) + "</h2>" +
+        '<p class="doc-path">' + esc(active.path) + "</p>" +
+        active.html;
+    }
+
+    function renderTasks() {
+      const search = document.getElementById("task-search").value.toLowerCase();
+      const filter = document.getElementById("task-status-filter").value;
+      const allTasks = DATA.tasks || [];
+      const filtered = allTasks.filter(task => {
+        const hay = TASK_COLUMNS.map(column => {
+          const value = task[column];
+          return Array.isArray(value) ? value.join(", ") : String(value ?? "");
+        }).join(" ").toLowerCase();
+        const matchesSearch = !search || hay.includes(search);
+        const matchesStatus = !filter || filter === "ALL" || task.status === filter;
+        return matchesSearch && matchesStatus;
+      });
+
+      filtered.sort((left, right) => {
+        const leftRaw = Array.isArray(left[sortKey]) ? left[sortKey].join(", ") : String(left[sortKey] ?? "");
+        const rightRaw = Array.isArray(right[sortKey]) ? right[sortKey].join(", ") : String(right[sortKey] ?? "");
+        const cmp = leftRaw.localeCompare(rightRaw, undefined, { sensitivity: "base", numeric: true });
+        return sortDir === "asc" ? cmp : -cmp;
+      });
+
+      const head = document.getElementById("tasks-head");
+      head.innerHTML = "<tr>" + TASK_COLUMNS.map(column => {
+        const marker = sortKey === column ? (sortDir === "asc" ? " ▲" : " ▼") : "";
+        return '<th data-col="' + column + '">' + esc(TASK_LABELS[column]) + marker + "</th>";
+      }).join("") + "</tr>";
+      head.querySelectorAll("th").forEach(th => {
+        th.onclick = () => {
+          const nextKey = th.dataset.col;
+          if (sortKey === nextKey) {
+            sortDir = sortDir === "asc" ? "desc" : "asc";
+          } else {
+            sortKey = nextKey;
+            sortDir = "asc";
+          }
+          renderTasks();
+        };
+      });
+
+      const body = document.getElementById("tasks-body");
+      if (!filtered.length) {
+        body.innerHTML = '<tr><td colspan="7" class="empty">No tasks match current filters.</td></tr>';
+        return;
+      }
+      body.innerHTML = filtered.map(task => {
+        return "<tr>" + TASK_COLUMNS.map(column => {
+          const value = task[column];
+          const rendered = Array.isArray(value) ? value.join(", ") : String(value ?? "");
+          return "<td>" + esc(rendered) + "</td>";
+        }).join("") + "</tr>";
+      }).join("");
+    }
+
+    function eventHtml(entry) {
+      const role = entry.role_id || "unknown";
+      const color = roleColor(role);
+      const status = entry.status ? " | " + entry.status : "";
+      const task = entry.task_id ? " | Task " + entry.task_id : "";
+      const summary = entry.summary || entry.event_type || "Activity event";
+      return [
+        '<article class="event" style="border-left-color:' + color + '">',
+        '<div class="event-head">',
+        '<span class="event-role" style="background:' + color + '">' + esc(role) + "</span>",
+        '<span class="event-time">' + esc(entry.ts_utc || "") + "</span>",
+        "</div>",
+        '<p class="event-summary">' + esc(summary) + "</p>",
+        '<div class="event-meta">' + esc((entry.event_type || "event") + task + status) + "</div>",
+        "</article>"
+      ].join("");
+    }
+
+    function renderActivity() {
+      const root = document.getElementById("activity-log");
+      const events = DATA.activity_log || [];
+      if (!events.length) {
+        root.innerHTML = '<p class="empty">No activity yet. Events appear here after orchestrator runs.</p>';
+        return;
+      }
+      root.innerHTML = events.map(eventHtml).join("");
+    }
+
+    function renderAgentPanel(agent) {
+      const panel = document.getElementById("agent-panel");
+      const events = agent.activity || [];
+      const roleContextHtml = agent.role_context_html || '<p class="empty">No role context file found.</p>';
+      panel.innerHTML = [
+        '<header class="agent-header" style="border-left-color:' + agent.color + '">',
+        "<h3>" + esc(agent.display_name) + " (" + esc(agent.role_id) + ")</h3>",
+        "</header>",
+        '<section class="agent-section"><h4>Role Context</h4>' + roleContextHtml + "</section>",
+        '<section class="agent-section"><h4>Activity</h4>',
+        events.length ? '<div class="timeline">' + events.map(eventHtml).join("") + "</div>" :
+          '<p class="empty">No activity for this agent yet.</p>',
+        "</section>"
+      ].join("");
+    }
+
+    function renderAgents() {
+      const tabs = document.getElementById("agent-tabs");
+      const agents = DATA.agents || [];
+      tabs.innerHTML = "";
+      if (!agents.length) {
+        document.getElementById("agent-panel").innerHTML = '<p class="empty">No enabled agents.</p>';
+        return;
+      }
+      if (!activeAgentId || !agents.some(agent => agent.role_id === activeAgentId)) {
+        activeAgentId = agents[0].role_id;
+      }
+      agents.forEach(agent => {
+        const button = document.createElement("button");
+        button.className = "agent-tab" + (agent.role_id === activeAgentId ? " active" : "");
+        button.style.borderLeft = "6px solid " + agent.color;
+        button.textContent = agent.display_name;
+        button.onclick = () => {
+          activeAgentId = agent.role_id;
+          renderAgents();
+        };
+        tabs.appendChild(button);
+      });
+      const active = agents.find(agent => agent.role_id === activeAgentId) || agents[0];
+      renderAgentPanel(active);
+    }
+
+    function initTaskControls() {
+      const statuses = ["ALL", ...Object.keys(DATA.project.status_counts || {})];
+      const filter = document.getElementById("task-status-filter");
+      filter.innerHTML = statuses.map(status => (
+        '<option value="' + esc(status) + '">' + (status === "ALL" ? "All Statuses" : esc(status)) + "</option>"
+      )).join("");
+      document.getElementById("task-search").addEventListener("input", renderTasks);
+      filter.addEventListener("change", renderTasks);
+    }
+
+    function boot() {
+      renderTabs();
+      renderHeader();
+      renderProject();
+      renderDocuments();
+      initTaskControls();
+      renderTasks();
+      renderActivity();
+      renderAgents();
+    }
+
+    boot();
+  </script>
+</body>
+</html>

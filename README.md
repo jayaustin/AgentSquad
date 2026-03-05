@@ -13,7 +13,7 @@ To use this framework for a new project:
 3. Start a fresh IDE agent thread and use this short prompt:
 
 ```text
-Initialize this thread as AgentSquad Operator
+Read AGENTS.md and initialize this thread as AgentSquad Operator
 ```
 
 4. The IDE agent should run all required bootstrap CLI commands automatically:
@@ -26,6 +26,12 @@ Initialize this thread as AgentSquad Operator
 
 Note: users should not need to run command-line steps to initialize Operator.
 Initialization should be fully handled by the IDE agent thread.
+
+During orchestration, AgentSquad auto-generates a browser dashboard snapshot at:
+
+- `project/state/dashboard.html`
+
+Open that file directly in any browser (`file://`) to inspect project state.
 
 ## Core Ideas
 
@@ -44,10 +50,32 @@ Run commands from repository root:
 python -m runner.orchestrator init
 python -m runner.orchestrator bootstrap-operator --print-packet
 python -m runner.orchestrator validate
+python -m runner.orchestrator render-dashboard
 python -m runner.orchestrator run --request "your request"
 python -m runner.orchestrator step
 python -m runner.orchestrator resume
 ```
+
+## Dashboard
+
+AgentSquad renders a no-server, dark-mode dashboard snapshot after operator and
+step execution events. The dashboard includes:
+
+- `Project`: project summary, execution policy, role counts, state/halt info
+- `Documents`: browser-friendly rendering of included markdown deliverables
+- `Tasks`: backlog table with sort/filter controls
+- `Activity Log`: global timeline across all roles
+- `Agents`: per-role tabs with role context and individual activity timeline
+
+Color accents are role-specific and configurable in
+`project/config/project.yaml` under `dashboard.agent_colors`.
+
+Structured activity events are written to:
+
+- `project/state/activity-log.jsonl` (global)
+- `project/workspaces/<role-id>/activity.jsonl` (per role)
+
+Markdown run journals remain in `project/workspaces/<role-id>/runs/`.
 
 ## Host Adapter
 

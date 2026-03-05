@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from . import backlog_store, context_loader, contracts, logging_store, validators
+from . import backlog_store, context_loader, contracts, dashboard, logging_store, validators
 from .adapters import AdapterError, build_adapter
 
 
@@ -267,6 +267,7 @@ def _project_config_seed() -> dict[str, Any]:
             "selection_policy": "dependency-fifo",
         },
         "backlog": {"statuses": DEFAULT_STATUSES},
+        "dashboard": validators.dashboard_config_with_defaults({}),
     }
 
 
@@ -313,6 +314,9 @@ def seed_scaffold(root: Path) -> list[Path]:
     if not state_path.exists():
         validators.write_yaml_file(state_path, _default_state())
         created.append(state_path)
+    activity_log_path = root / "project" / "state" / "activity-log.jsonl"
+    if _write_if_missing(activity_log_path, ""):
+        created.append(activity_log_path)
 
     for role_id, meta in ROLE_DEFINITIONS.items():
         notes_path = root / "project" / "workspaces" / role_id / "notes.md"
@@ -324,11 +328,15 @@ def seed_scaffold(root: Path) -> list[Path]:
         runs_keep = root / "project" / "workspaces" / role_id / "runs" / ".gitkeep"
         if _write_if_missing(runs_keep, "\n"):
             created.append(runs_keep)
+        role_activity = root / "project" / "workspaces" / role_id / "activity.jsonl"
+        if _write_if_missing(role_activity, ""):
+            created.append(role_activity)
 
     template_files = {
         "operator-plan-prompt.md": "Return operator_plan JSON only.\n",
         "agent-task-prompt.md": "Return agent_result JSON only.\n",
         "json-contracts.md": "# JSON Contracts\n",
+        "dashboard.html": "<html><body>{{DASHBOARD_PAYLOAD_JSON}}</body></html>\n",
     }
     for file_name, content in template_files.items():
         template_path = root / "runner" / "templates" / file_name
@@ -584,6 +592,8 @@ def _invoke_with_retry(
 
 def _runtime(root: Path) -> dict[str, Any]:
     config = validators.load_project_config(root)
+    dashboard_config = validators.dashboard_config_with_defaults(config)
+    config["dashboard"] = dashboard_config
     registry = validators.load_registry(root)
     roles_map = registry["roles"]
     known_roles = set(roles_map.keys())
@@ -606,7 +616,27 @@ def _runtime(root: Path) -> dict[str, Any]:
         "adapter_command": adapter_command,
         "session_mode": session_mode,
         "context_rot_guardrails": context_rot_guardrails,
+        "dashboard": dashboard_config,
     }
+
+
+def _render_dashboard_best_effort(
+    root: Path,
+    runtime: dict[str, Any] | None,
+    trigger: str,
+) -> None:
+    try:
+        if runtime is not None:
+            dash_cfg = runtime.get("dashboard", {})
+        else:
+            config = validators.load_project_config(root)
+            dash_cfg = validators.dashboard_config_with_defaults(config)
+        if not bool(dash_cfg.get("enabled", True)):
+            return
+        output_path = dashboard.render_dashboard(root)
+        print(f"Dashboard updated ({trigger}): {output_path.as_posix()}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"Dashboard render warning ({trigger}): {exc}")
 
 
 def _is_value_defined(raw_value: str) -> bool:
@@ -835,7 +865,12 @@ def _invoke_operator(
         backlog_before=backlog_before,
         backlog_after=backlog_after,
         events=[f"mode={mode_label}", "operator_plan parsed"] + session_events,
+        event_type="operator_plan",
+        summary=parsed.get("summary") or f"Operator created plan for mode '{mode_label}'.",
+        status="Planned",
+        metadata={"mode": mode_label, "tasks_generated": len(parsed.get("tasks", []))},
     )
+    _render_dashboard_best_effort(root, runtime, f"operator-{mode_label}")
     return updated_tasks
 
 
@@ -1007,6 +1042,10 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
         backlog_before=backlog_before,
         backlog_after=backlog_after,
         events=events,
+        event_type="agent_result",
+        summary=parsed.get("summary") or f"{owner} updated task '{task_id}'.",
+        status=parsed.get("status", ""),
+        metadata={"handoff_requested": bool(parsed.get("handoff_request"))},
     )
 
     if parsed["status"] == "Done":
@@ -1014,6 +1053,7 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
     state["history"].append(
         {"ts": utc_now(), "event": "task-step", "task_id": task_id, "owner": owner}
     )
+    _render_dashboard_best_effort(root, runtime, f"task-step-{task_id}")
     save_state(root, state)
     return True
 
@@ -1057,6 +1097,17 @@ def cmd_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_render_dashboard(args: argparse.Namespace) -> int:
+    root = repo_root()
+    try:
+        output_path = dashboard.render_dashboard(root)
+        print(f"Dashboard rendered: {output_path.as_posix()}")
+        return 0
+    except Exception as exc:  # noqa: BLE001
+        print(f"Dashboard render failed: {exc}")
+        return 1
+
+
 def _prepare_runtime_or_exit(root: Path) -> dict[str, Any]:
     errors = validators.validate_framework(root)
     if errors:
@@ -1083,6 +1134,7 @@ def cmd_run(args: argparse.Namespace) -> int:
     state["current_request"] = args.request
     save_state(root, state)
 
+    runtime: dict[str, Any] | None = None
     try:
         runtime = _prepare_runtime_or_exit(root)
         _invoke_operator(root, runtime, state, args.request, "initial-plan")
@@ -1092,10 +1144,12 @@ def cmd_run(args: argparse.Namespace) -> int:
         return 0
     except KeyboardInterrupt:
         halt_with_reason(root, state, "Interrupted by user.")
+        _render_dashboard_best_effort(root, runtime, "run-halt-keyboardinterrupt")
         print("Run interrupted and state persisted.")
         return 1
     except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
         halt_with_reason(root, state, str(exc))
+        _render_dashboard_best_effort(root, runtime, "run-halt-error")
         print(f"Run halted: {exc}")
         return 1
 
@@ -1103,6 +1157,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_step(args: argparse.Namespace) -> int:
     root = repo_root()
     state = load_state(root)
+    runtime: dict[str, Any] | None = None
     try:
         runtime = _prepare_runtime_or_exit(root)
         if not state.get("current_request") and not backlog_store.read_backlog(root / "backlog.md"):
@@ -1116,6 +1171,7 @@ def cmd_step(args: argparse.Namespace) -> int:
         return 0
     except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
         halt_with_reason(root, state, str(exc))
+        _render_dashboard_best_effort(root, runtime, "step-halt-error")
         print(f"Step halted: {exc}")
         return 1
 
@@ -1123,6 +1179,7 @@ def cmd_step(args: argparse.Namespace) -> int:
 def cmd_resume(args: argparse.Namespace) -> int:
     root = repo_root()
     state = load_state(root)
+    runtime: dict[str, Any] | None = None
     try:
         runtime = _prepare_runtime_or_exit(root)
         state["halted"] = False
@@ -1134,10 +1191,12 @@ def cmd_resume(args: argparse.Namespace) -> int:
         return 0
     except KeyboardInterrupt:
         halt_with_reason(root, state, "Interrupted by user.")
+        _render_dashboard_best_effort(root, runtime, "resume-halt-keyboardinterrupt")
         print("Resume interrupted and state persisted.")
         return 1
     except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
         halt_with_reason(root, state, str(exc))
+        _render_dashboard_best_effort(root, runtime, "resume-halt-error")
         print(f"Resume halted: {exc}")
         return 1
 
@@ -1167,6 +1226,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate_parser = sub.add_parser("validate", help="Validate framework integrity.")
     validate_parser.set_defaults(func=cmd_validate)
+
+    render_dashboard_parser = sub.add_parser(
+        "render-dashboard",
+        help="Build the static project dashboard snapshot.",
+    )
+    render_dashboard_parser.set_defaults(func=cmd_render_dashboard)
 
     run_parser = sub.add_parser("run", help="Run full orchestration from a human request.")
     run_parser.add_argument("--request", required=True, help="Human request text.")

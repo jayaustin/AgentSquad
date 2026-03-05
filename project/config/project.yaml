@@ -34,3 +34,39 @@ backlog:
     - Blocked
     - In Validation
     - Done
+dashboard:
+  enabled: true
+  output_file: project/state/dashboard.html
+  refresh_policy: after-every-step
+  failure_mode: non-blocking-log
+  docs:
+    include_paths:
+      - project/docs
+      - docs
+      - project/context
+    exclude_globs:
+      - superpowers/**
+      - steering/**
+      - runner/templates/**
+      - project/workspaces/**/runs/**
+      - project/workspaces/**/notes.md
+    primary_name_keywords:
+      - design
+      - technical
+      - architecture
+      - spec
+      - product
+      - qa
+      - localization
+  agent_colors:
+    operator: "#3B82F6"
+    designer-acquisition: "#10B981"
+    designer-engagement: "#F59E0B"
+    art-director: "#F43F5E"
+    technical-architect: "#06B6D4"
+    development-engineer-python: "#8B5CF6"
+    development-engineer-powershell: "#0EA5E9"
+    qa-manager: "#84CC16"
+    localization-engineer: "#F97316"
+    product-manager: "#EC4899"
+    data-analyst: "#14B8A6"

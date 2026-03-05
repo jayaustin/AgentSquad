@@ -1,0 +1,296 @@
+"""Static dashboard renderer for AgentSquad state."""
+
+from __future__ import annotations
+
+import hashlib
+import html
+import json
+import re
+from datetime import datetime, timezone
+from pathlib import Path, PurePosixPath
+from typing import Any
+
+from . import backlog_store, validators
+
+
+DEFAULT_FALLBACK_COLORS = [
+    "#22D3EE",
+    "#A78BFA",
+    "#34D399",
+    "#F472B6",
+    "#FACC15",
+    "#60A5FA",
+    "#FB7185",
+    "#2DD4BF",
+]
+
+
+def _strip_frontmatter(markdown_text: str) -> str:
+    match = re.match(r"^---\n.*?\n---\n?", markdown_text, flags=re.DOTALL)
+    if match:
+        return markdown_text[match.end() :].lstrip()
+    return markdown_text
+
+
+def _markdown_to_html(markdown_text: str) -> str:
+    """Minimal markdown renderer using only stdlib."""
+
+    def inline_markup(text: str) -> str:
+        escaped = html.escape(text, quote=False)
+        escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
+        escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
+        escaped = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", escaped)
+        escaped = re.sub(
+            r"\[([^\]]+)\]\(([^)]+)\)",
+            lambda m: f'<a href="{html.escape(m.group(2), quote=True)}">{m.group(1)}</a>',
+            escaped,
+        )
+        return escaped
+
+    lines = markdown_text.splitlines()
+    out: list[str] = []
+    in_code = False
+    in_list = False
+    paragraph: list[str] = []
+
+    def flush_paragraph() -> None:
+        nonlocal paragraph
+        if not paragraph:
+            return
+        text = " ".join(item.strip() for item in paragraph if item.strip())
+        if text:
+            out.append(f"<p>{inline_markup(text)}</p>")
+        paragraph = []
+
+    def close_list() -> None:
+        nonlocal in_list
+        if in_list:
+            out.append("</ul>")
+            in_list = False
+
+    for line in lines:
+        stripped = line.rstrip()
+        if stripped.startswith("```"):
+            flush_paragraph()
+            close_list()
+            if in_code:
+                out.append("</code></pre>")
+                in_code = False
+            else:
+                language = stripped[3:].strip()
+                class_attr = (
+                    f' class="language-{html.escape(language, quote=True)}"' if language else ""
+                )
+                out.append(f"<pre><code{class_attr}>")
+                in_code = True
+            continue
+
+        if in_code:
+            out.append(html.escape(stripped, quote=False))
+            continue
+
+        if not stripped:
+            flush_paragraph()
+            close_list()
+            continue
+
+        heading = re.match(r"^(#{1,6})\s+(.*)$", stripped)
+        if heading:
+            flush_paragraph()
+            close_list()
+            level = len(heading.group(1))
+            out.append(f"<h{level}>{inline_markup(heading.group(2))}</h{level}>")
+            continue
+
+        if stripped.startswith("- "):
+            flush_paragraph()
+            if not in_list:
+                out.append("<ul>")
+                in_list = True
+            out.append(f"<li>{inline_markup(stripped[2:].strip())}</li>")
+            continue
+
+        paragraph.append(stripped)
+
+    flush_paragraph()
+    close_list()
+    if in_code:
+        out.append("</code></pre>")
+    return "\n".join(out)
+
+
+def _read_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    entries: list[dict[str, Any]] = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        raw = line.strip()
+        if not raw:
+            continue
+        try:
+            parsed = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            entries.append(parsed)
+    entries.sort(key=lambda item: str(item.get("ts_utc", "")), reverse=True)
+    return entries
+
+
+def _fallback_color(role_id: str) -> str:
+    digest = hashlib.sha256(role_id.encode("utf-8")).hexdigest()
+    index = int(digest[:8], 16) % len(DEFAULT_FALLBACK_COLORS)
+    return DEFAULT_FALLBACK_COLORS[index]
+
+
+def _collect_documents(root: Path, dashboard_cfg: dict[str, Any]) -> list[dict[str, Any]]:
+    docs_cfg = dashboard_cfg.get("docs", {})
+    include_paths = docs_cfg.get("include_paths", [])
+    exclude_globs = docs_cfg.get("exclude_globs", [])
+    primary_keywords = [str(keyword).lower() for keyword in docs_cfg.get("primary_name_keywords", [])]
+    seen: set[str] = set()
+    docs: list[dict[str, Any]] = []
+
+    for include_path in include_paths:
+        base = root / str(include_path)
+        if not base.exists():
+            continue
+        for md_path in sorted(base.rglob("*.md")):
+            rel = md_path.relative_to(root).as_posix()
+            if rel in seen:
+                continue
+            pure = PurePosixPath(rel)
+            if any(pure.match(pattern) for pattern in exclude_globs):
+                continue
+
+            text = md_path.read_text(encoding="utf-8", errors="replace")
+            title = md_path.stem.replace("-", " ").replace("_", " ").title()
+            first_heading = re.search(r"^#\s+(.+)$", text, flags=re.MULTILINE)
+            if first_heading:
+                title = first_heading.group(1).strip()
+            lower_path = rel.lower()
+            primary = any(keyword in lower_path for keyword in primary_keywords)
+
+            docs.append(
+                {
+                    "id": rel.replace("/", "__"),
+                    "path": rel,
+                    "title": title,
+                    "is_primary": primary,
+                    "html": _markdown_to_html(text),
+                }
+            )
+            seen.add(rel)
+
+    docs.sort(key=lambda item: (not bool(item["is_primary"]), item["path"]))
+    return docs
+
+
+def _backlog_status_counts(tasks: list[dict[str, Any]], statuses: list[str]) -> dict[str, int]:
+    counts = {status: 0 for status in statuses}
+    for task in tasks:
+        status = str(task.get("status", ""))
+        if status in counts:
+            counts[status] += 1
+    return counts
+
+
+def _build_payload(root: Path) -> dict[str, Any]:
+    config = validators.load_project_config(root)
+    dashboard_cfg = validators.dashboard_config_with_defaults(config)
+    roles_cfg = config.get("roles", {})
+    enabled_roles = list(roles_cfg.get("enabled", []))
+    disabled_roles = list(roles_cfg.get("disabled", []))
+    registry = validators.load_registry(root).get("roles", {})
+    state = validators.load_data_file(root / "project" / "state" / "orchestrator-state.yaml")
+    tasks = backlog_store.read_backlog(root / "backlog.md")
+    statuses = list(config.get("backlog", {}).get("statuses", []))
+    status_counts = _backlog_status_counts(tasks, statuses)
+
+    configured_colors = dashboard_cfg.get("agent_colors", {})
+    role_colors: dict[str, str] = {}
+    for role_id in sorted(set(enabled_roles) | set(disabled_roles) | set(registry.keys())):
+        configured = str(configured_colors.get(role_id, "")).strip()
+        role_colors[role_id] = (
+            configured
+            if validators.HEX_COLOR_PATTERN.fullmatch(configured)
+            else _fallback_color(role_id)
+        )
+
+    global_log = _read_jsonl(root / "project" / "state" / "activity-log.jsonl")
+    per_role_logs = {
+        role_id: _read_jsonl(root / "project" / "workspaces" / role_id / "activity.jsonl")
+        for role_id in sorted(set(enabled_roles) | set(disabled_roles))
+    }
+
+    role_entries: list[dict[str, Any]] = []
+    for role_id in enabled_roles:
+        role_path = root / "agents" / "roles" / role_id / "agent-role.md"
+        role_text = ""
+        if role_path.exists():
+            role_text = _strip_frontmatter(
+                role_path.read_text(encoding="utf-8", errors="replace")
+            )
+        role_entries.append(
+            {
+                "role_id": role_id,
+                "display_name": registry.get(role_id, {}).get(
+                    "display_name", role_id.replace("-", " ").title()
+                ),
+                "color": role_colors.get(role_id, _fallback_color(role_id)),
+                "role_context_html": _markdown_to_html(role_text),
+                "activity": per_role_logs.get(role_id, []),
+            }
+        )
+
+    project_info = config.get("project", {})
+    host_info = config.get("host", {})
+    execution_info = config.get("execution", {})
+    payload = {
+        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "project": {
+            "id": project_info.get("id", ""),
+            "name": project_info.get("name", ""),
+            "primary_adapter": host_info.get("primary_adapter", ""),
+            "adapter_command": host_info.get("adapter_command", ""),
+            "session_mode": host_info.get("session_mode", "per-role-threads"),
+            "execution_mode": execution_info.get("mode", ""),
+            "handoff_authority": execution_info.get("handoff_authority", ""),
+            "selection_policy": execution_info.get("selection_policy", ""),
+            "enabled_roles": enabled_roles,
+            "disabled_roles": disabled_roles,
+            "status_counts": status_counts,
+            "state": {
+                "run_id": state.get("run_id", ""),
+                "active_role": state.get("active_role"),
+                "last_completed_task_id": state.get("last_completed_task_id", ""),
+                "halted": bool(state.get("halted", False)),
+                "halt_reason": state.get("halt_reason", ""),
+                "current_request": state.get("current_request", ""),
+            },
+        },
+        "documents": _collect_documents(root, dashboard_cfg),
+        "tasks": tasks,
+        "activity_log": global_log,
+        "agents": role_entries,
+        "agent_colors": role_colors,
+    }
+    return payload
+
+
+def render_dashboard(root: Path) -> Path:
+    config = validators.load_project_config(root)
+    dashboard_cfg = validators.dashboard_config_with_defaults(config)
+    output_file = root / str(dashboard_cfg.get("output_file", "project/state/dashboard.html"))
+
+    template_path = root / "runner" / "templates" / "dashboard.html"
+    template = template_path.read_text(encoding="utf-8")
+    payload = _build_payload(root)
+    rendered = template.replace(
+        "{{DASHBOARD_PAYLOAD_JSON}}",
+        json.dumps(payload, ensure_ascii=True).replace("</", "<\\/"),
+    )
+
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    output_file.write_text(rendered, encoding="utf-8")
+    return output_file

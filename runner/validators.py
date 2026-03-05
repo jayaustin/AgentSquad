@@ -14,6 +14,50 @@ class ValidationFailure(ValueError):
     """Raised when data cannot be parsed or validated."""
 
 
+DASHBOARD_AGENT_COLOR_DEFAULTS = {
+    "operator": "#3B82F6",
+    "designer-acquisition": "#10B981",
+    "designer-engagement": "#F59E0B",
+    "art-director": "#F43F5E",
+    "technical-architect": "#06B6D4",
+    "development-engineer-python": "#8B5CF6",
+    "development-engineer-powershell": "#0EA5E9",
+    "qa-manager": "#84CC16",
+    "localization-engineer": "#F97316",
+    "product-manager": "#EC4899",
+    "data-analyst": "#14B8A6",
+}
+
+DASHBOARD_DEFAULTS = {
+    "enabled": True,
+    "output_file": "project/state/dashboard.html",
+    "refresh_policy": "after-every-step",
+    "failure_mode": "non-blocking-log",
+    "docs": {
+        "include_paths": ["project/docs", "docs", "project/context"],
+        "exclude_globs": [
+            "superpowers/**",
+            "steering/**",
+            "runner/templates/**",
+            "project/workspaces/**/runs/**",
+            "project/workspaces/**/notes.md",
+        ],
+        "primary_name_keywords": [
+            "design",
+            "technical",
+            "architecture",
+            "spec",
+            "product",
+            "qa",
+            "localization",
+        ],
+    },
+    "agent_colors": DASHBOARD_AGENT_COLOR_DEFAULTS,
+}
+
+HEX_COLOR_PATTERN = re.compile(r"^#[0-9A-Fa-f]{6}$")
+
+
 def _strip_line_comment(raw_line: str) -> str:
     line = raw_line.rstrip("\n")
     if "#" not in line:
@@ -236,6 +280,135 @@ def collect_superpower_ids(root: Path) -> set[str]:
     return ids
 
 
+def _normalize_str_list(value: Any, fallback: list[str]) -> list[str]:
+    if not isinstance(value, list):
+        return list(fallback)
+    normalized: list[str] = []
+    for item in value:
+        text = str(item).strip()
+        if text:
+            normalized.append(text)
+    return normalized or list(fallback)
+
+
+def dashboard_config_with_defaults(config: dict[str, Any]) -> dict[str, Any]:
+    dashboard = config.get("dashboard", {})
+    if not isinstance(dashboard, dict):
+        dashboard = {}
+
+    docs_input = dashboard.get("docs", {})
+    if not isinstance(docs_input, dict):
+        docs_input = {}
+
+    colors = dict(DASHBOARD_DEFAULTS["agent_colors"])
+    raw_colors = dashboard.get("agent_colors", {})
+    if isinstance(raw_colors, dict):
+        for role_id, color in raw_colors.items():
+            role_key = str(role_id).strip()
+            color_value = str(color).strip()
+            if role_key and color_value:
+                colors[role_key] = color_value
+
+    enabled_value = dashboard.get("enabled", DASHBOARD_DEFAULTS["enabled"])
+    enabled = enabled_value if isinstance(enabled_value, bool) else bool(DASHBOARD_DEFAULTS["enabled"])
+
+    return {
+        "enabled": enabled,
+        "output_file": str(
+            dashboard.get("output_file", DASHBOARD_DEFAULTS["output_file"])
+        ).strip()
+        or str(DASHBOARD_DEFAULTS["output_file"]),
+        "refresh_policy": str(
+            dashboard.get("refresh_policy", DASHBOARD_DEFAULTS["refresh_policy"])
+        ).strip()
+        or str(DASHBOARD_DEFAULTS["refresh_policy"]),
+        "failure_mode": str(
+            dashboard.get("failure_mode", DASHBOARD_DEFAULTS["failure_mode"])
+        ).strip()
+        or str(DASHBOARD_DEFAULTS["failure_mode"]),
+        "docs": {
+            "include_paths": _normalize_str_list(
+                docs_input.get("include_paths"),
+                list(DASHBOARD_DEFAULTS["docs"]["include_paths"]),
+            ),
+            "exclude_globs": _normalize_str_list(
+                docs_input.get("exclude_globs"),
+                list(DASHBOARD_DEFAULTS["docs"]["exclude_globs"]),
+            ),
+            "primary_name_keywords": _normalize_str_list(
+                docs_input.get("primary_name_keywords"),
+                list(DASHBOARD_DEFAULTS["docs"]["primary_name_keywords"]),
+            ),
+        },
+        "agent_colors": colors,
+    }
+
+
+def _validate_dashboard_config(config: dict[str, Any]) -> list[str]:
+    errors: list[str] = []
+    dashboard = config.get("dashboard")
+    if dashboard is None:
+        return errors
+    if not isinstance(dashboard, dict):
+        return ["dashboard must be an object if provided."]
+
+    if "enabled" in dashboard and not isinstance(dashboard["enabled"], bool):
+        errors.append("dashboard.enabled must be boolean.")
+
+    output_file = dashboard.get("output_file")
+    if output_file is not None and (not isinstance(output_file, str) or not output_file.strip()):
+        errors.append("dashboard.output_file must be a non-empty string.")
+
+    refresh_policy = dashboard.get("refresh_policy")
+    if refresh_policy is not None and refresh_policy != "after-every-step":
+        errors.append("dashboard.refresh_policy must be 'after-every-step'.")
+
+    failure_mode = dashboard.get("failure_mode")
+    if failure_mode is not None and failure_mode != "non-blocking-log":
+        errors.append("dashboard.failure_mode must be 'non-blocking-log'.")
+
+    docs = dashboard.get("docs")
+    if docs is not None:
+        if not isinstance(docs, dict):
+            errors.append("dashboard.docs must be an object if provided.")
+        else:
+            for key in ("include_paths", "exclude_globs", "primary_name_keywords"):
+                value = docs.get(key)
+                if value is None:
+                    continue
+                if not isinstance(value, list) or not all(
+                    isinstance(item, str) and item.strip() for item in value
+                ):
+                    errors.append(f"dashboard.docs.{key} must be a list of non-empty strings.")
+
+    colors = dashboard.get("agent_colors")
+    if colors is not None:
+        if not isinstance(colors, dict):
+            errors.append("dashboard.agent_colors must be an object if provided.")
+        else:
+            seen_values: dict[str, str] = {}
+            for role_id, color in colors.items():
+                role_name = str(role_id).strip()
+                if not role_name:
+                    errors.append("dashboard.agent_colors keys must be non-empty role IDs.")
+                    continue
+                if not isinstance(color, str) or not HEX_COLOR_PATTERN.fullmatch(color):
+                    errors.append(
+                        f"dashboard.agent_colors['{role_name}'] must be a hex color like #1A2B3C."
+                    )
+                    continue
+                lowered = color.lower()
+                previous = seen_values.get(lowered)
+                if previous and previous != role_name:
+                    errors.append(
+                        "dashboard.agent_colors must use unique colors per role. "
+                        f"Duplicate: '{role_name}' and '{previous}' both use '{color}'."
+                    )
+                seen_values[lowered] = role_name
+
+    return errors
+
+
 def _validate_project_config(config: dict[str, Any]) -> list[str]:
     errors: list[str] = []
     required_toplevel = {"project", "host", "roles", "execution", "backlog"}
@@ -287,6 +460,7 @@ def _validate_project_config(config: dict[str, Any]) -> list[str]:
     expected_statuses = ["Todo", "In Progress", "Blocked", "In Validation", "Done"]
     if statuses != expected_statuses:
         errors.append(f"backlog.statuses must equal {expected_statuses}.")
+    errors.extend(_validate_dashboard_config(config))
     return errors
 
 
@@ -336,6 +510,8 @@ def validate_framework(root: Path) -> list[str]:
         root / "project" / "context" / "project-context.md",
         root / "project" / "state" / "orchestrator-state.yaml",
         root / "runner" / "orchestrator.py",
+        root / "runner" / "dashboard.py",
+        root / "runner" / "templates" / "dashboard.html",
     ]
     for path in required_paths:
         if not path.exists():
