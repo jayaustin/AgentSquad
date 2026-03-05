@@ -1,0 +1,32 @@
+project:
+  id: sample-project
+  name: Sample Project
+host:
+  primary_adapter: codex
+  adapter_command: REPLACE_WITH_LOCAL_ASSISTANT_COMMAND
+roles:
+  enabled:
+    - operator
+    - designer-acquisition
+    - designer-engagement
+    - art-director
+    - technical-architect
+    - development-engineer-python
+    - development-engineer-powershell
+    - qa-manager
+    - localization-engineer
+    - product-manager
+    - data-analyst
+  disabled: []
+execution:
+  mode: sequential
+  handoff_authority: operator-mediated
+  selection_policy: dependency-fifo
+backlog:
+  statuses:
+    - Todo
+    - In Progress
+    - Blocked
+    - In Validation
+    - Done
+

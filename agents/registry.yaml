@@ -1,0 +1,35 @@
+roles:
+  operator:
+    display_name: Operator
+    role_file: agents/roles/operator/agent-role.md
+  designer-acquisition:
+    display_name: Designer Acquisition
+    role_file: agents/roles/designer-acquisition/agent-role.md
+  designer-engagement:
+    display_name: Designer Engagement
+    role_file: agents/roles/designer-engagement/agent-role.md
+  art-director:
+    display_name: Art Director
+    role_file: agents/roles/art-director/agent-role.md
+  technical-architect:
+    display_name: Technical Architect
+    role_file: agents/roles/technical-architect/agent-role.md
+  development-engineer-python:
+    display_name: Development Engineer Python
+    role_file: agents/roles/development-engineer-python/agent-role.md
+  development-engineer-powershell:
+    display_name: Development Engineer PowerShell
+    role_file: agents/roles/development-engineer-powershell/agent-role.md
+  qa-manager:
+    display_name: QA Manager
+    role_file: agents/roles/qa-manager/agent-role.md
+  localization-engineer:
+    display_name: Localization Engineer
+    role_file: agents/roles/localization-engineer/agent-role.md
+  product-manager:
+    display_name: Product Manager
+    role_file: agents/roles/product-manager/agent-role.md
+  data-analyst:
+    display_name: Data Analyst
+    role_file: agents/roles/data-analyst/agent-role.md
+

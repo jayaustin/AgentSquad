@@ -1,0 +1,822 @@
+"""AgentSquad orchestration CLI."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+from . import backlog_store, context_loader, contracts, logging_store, validators
+from .adapters import AdapterError, build_adapter
+
+
+DEFAULT_STATUSES = ["Todo", "In Progress", "Blocked", "In Validation", "Done"]
+
+ROLE_DEFINITIONS: dict[str, dict[str, Any]] = {
+    "operator": {
+        "display_name": "Operator",
+        "mission": "Translate human requests into executable task plans and orchestrate role execution.",
+        "authority_level": "primary-interface",
+        "must_superpowers": [
+            "brainstorming",
+            "writing-plans",
+            "subagent-driven-development",
+            "requesting-code-review",
+        ],
+        "optional_superpowers": ["systematic-debugging", "using-git-worktrees"],
+        "inputs": ["human_request", "backlog_snapshot", "orchestration_state"],
+        "outputs": ["operator_plan", "backlog_updates"],
+        "handoff_rules": ["mediate_all_handoffs", "enforce_sequential_execution"],
+    },
+    "designer-acquisition": {
+        "display_name": "Designer Acquisition",
+        "mission": "Optimize design decisions for user acquisition outcomes.",
+        "authority_level": "domain-owner",
+        "must_superpowers": ["brainstorming", "writing-plans"],
+        "optional_superpowers": ["requesting-code-review", "systematic-debugging"],
+        "inputs": ["acquisition_goals", "user_research", "current_experience"],
+        "outputs": ["design_recommendations", "prioritized_tasks"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "designer-engagement": {
+        "display_name": "Designer Engagement",
+        "mission": "Optimize design for sustained user activity and repeat usage.",
+        "authority_level": "domain-owner",
+        "must_superpowers": ["brainstorming", "writing-plans"],
+        "optional_superpowers": ["requesting-code-review", "systematic-debugging"],
+        "inputs": ["engagement_goals", "behavioral_signals", "current_experience"],
+        "outputs": ["engagement_design_recommendations", "prioritized_tasks"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "art-director": {
+        "display_name": "Art Director",
+        "mission": "Maintain artistic coherence and approve visual direction.",
+        "authority_level": "top-level-authority",
+        "must_superpowers": ["brainstorming", "writing-plans"],
+        "optional_superpowers": ["requesting-code-review"],
+        "inputs": ["brand_direction", "visual_assets", "design_proposals"],
+        "outputs": ["art_requirements", "approvals_or_revisions"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "technical-architect": {
+        "display_name": "Technical Architect",
+        "mission": "Define and govern technical architecture and constraints.",
+        "authority_level": "top-level-authority",
+        "must_superpowers": ["brainstorming", "writing-plans", "requesting-code-review"],
+        "optional_superpowers": ["systematic-debugging", "using-git-worktrees"],
+        "inputs": ["product_requirements", "system_constraints", "engineering_feedback"],
+        "outputs": ["architecture_decisions", "technical_task_breakdown"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "development-engineer-python": {
+        "display_name": "Development Engineer Python",
+        "mission": "Implement and maintain Python deliverables with strong quality controls.",
+        "authority_level": "implementation-owner",
+        "must_superpowers": [
+            "test-driven-development",
+            "requesting-code-review",
+            "systematic-debugging",
+        ],
+        "optional_superpowers": ["writing-plans", "subagent-driven-development"],
+        "inputs": ["technical_spec", "assigned_backlog_task", "test_requirements"],
+        "outputs": ["code_changes", "test_results"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "development-engineer-powershell": {
+        "display_name": "Development Engineer PowerShell",
+        "mission": "Implement and maintain PowerShell deliverables with strong quality controls.",
+        "authority_level": "implementation-owner",
+        "must_superpowers": [
+            "test-driven-development",
+            "requesting-code-review",
+            "systematic-debugging",
+        ],
+        "optional_superpowers": ["writing-plans", "subagent-driven-development"],
+        "inputs": ["technical_spec", "assigned_backlog_task", "test_requirements"],
+        "outputs": ["script_changes", "test_results"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "qa-manager": {
+        "display_name": "QA Manager",
+        "mission": "Own validation strategy, test coverage, and release confidence.",
+        "authority_level": "top-level-authority",
+        "must_superpowers": [
+            "test-driven-development",
+            "requesting-code-review",
+            "systematic-debugging",
+        ],
+        "optional_superpowers": ["writing-plans"],
+        "inputs": ["implementation_artifacts", "acceptance_criteria", "risk_assessment"],
+        "outputs": ["validation_results", "release_readiness"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "localization-engineer": {
+        "display_name": "Localization Engineer",
+        "mission": "Define localization strategy and ensure language readiness.",
+        "authority_level": "domain-owner",
+        "must_superpowers": ["brainstorming", "writing-plans", "requesting-code-review"],
+        "optional_superpowers": ["systematic-debugging"],
+        "inputs": ["content_inventory", "target_locales", "release_plan"],
+        "outputs": ["localization_plan", "localization_tasks"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "product-manager": {
+        "display_name": "Product Manager",
+        "mission": "Own product strategy, business priorities, and monetization direction.",
+        "authority_level": "top-level-authority",
+        "must_superpowers": ["brainstorming", "writing-plans"],
+        "optional_superpowers": ["requesting-code-review"],
+        "inputs": ["market_goals", "business_constraints", "user_feedback"],
+        "outputs": ["product_plan", "prioritized_business_tasks"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+    "data-analyst": {
+        "display_name": "Data Analyst",
+        "mission": "Analyze available data and provide actionable cross-role recommendations.",
+        "authority_level": "domain-owner",
+        "must_superpowers": ["brainstorming", "writing-plans", "systematic-debugging"],
+        "optional_superpowers": ["requesting-code-review"],
+        "inputs": ["analytics_data", "operational_metrics", "experiment_results"],
+        "outputs": ["analytical_findings", "recommended_actions"],
+        "handoff_rules": ["request_operator_mediation_when_blocked"],
+    },
+}
+
+STEERING_SEEDS = {
+    "00-core-rules.md": (
+        "# Core Rules\n\n"
+        "1. Follow backlog ownership and dependency constraints.\n"
+        "2. Keep execution sequential.\n"
+        "3. Use operator-mediated handoffs.\n"
+    ),
+    "01-context-lifecycle.md": (
+        "# Context Lifecycle\n\n"
+        "Load order: steering -> role -> project -> role-override.\n"
+    ),
+    "02-backlog-governance.md": (
+        "# Backlog Governance\n\n"
+        "Use canonical backlog schema and allowed statuses only.\n"
+    ),
+    "03-handoff-protocol.md": (
+        "# Handoff Protocol\n\n"
+        "Handoffs must be mediated by Operator.\n"
+    ),
+}
+
+
+class OrchestrationHalt(RuntimeError):
+    """Raised when orchestration must halt."""
+
+
+def utc_now() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def repo_root() -> Path:
+    return Path.cwd()
+
+
+def _default_state() -> dict[str, Any]:
+    return {
+        "run_id": "",
+        "active_role": None,
+        "context_manifest": [],
+        "role_sequence": [],
+        "last_completed_task_id": "",
+        "current_request": "",
+        "halted": False,
+        "halt_reason": "",
+        "history": [],
+    }
+
+
+def _write_if_missing(path: Path, content: str) -> bool:
+    if path.exists():
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return True
+
+
+def _role_frontmatter_content(role_id: str, meta: dict[str, Any]) -> str:
+    def block_list(items: list[str]) -> str:
+        return "\n".join(f"  - {item}" for item in items)
+
+    return (
+        "---\n"
+        f"role_id: {role_id}\n"
+        f"display_name: {meta['display_name']}\n"
+        f"mission: {meta['mission']}\n"
+        f"authority_level: {meta['authority_level']}\n"
+        "must_superpowers:\n"
+        f"{block_list(meta['must_superpowers'])}\n"
+        "optional_superpowers:\n"
+        f"{block_list(meta['optional_superpowers'])}\n"
+        "inputs:\n"
+        f"{block_list(meta['inputs'])}\n"
+        "outputs:\n"
+        f"{block_list(meta['outputs'])}\n"
+        "handoff_rules:\n"
+        f"{block_list(meta['handoff_rules'])}\n"
+        "---\n\n"
+        f"# {meta['display_name']} Role\n\n"
+        f"{meta['mission']}\n"
+    )
+
+
+def _registry_seed() -> str:
+    lines = ["roles:"]
+    for role_id, meta in ROLE_DEFINITIONS.items():
+        lines.append(f"  {role_id}:")
+        lines.append(f"    display_name: {meta['display_name']}")
+        lines.append(f"    role_file: agents/roles/{role_id}/agent-role.md")
+    return "\n".join(lines) + "\n"
+
+
+def _project_config_seed() -> dict[str, Any]:
+    return {
+        "project": {"id": "sample-project", "name": "Sample Project"},
+        "host": {
+            "primary_adapter": "codex",
+            "adapter_command": "REPLACE_WITH_LOCAL_ASSISTANT_COMMAND",
+        },
+        "roles": {"enabled": list(ROLE_DEFINITIONS.keys()), "disabled": []},
+        "execution": {
+            "mode": "sequential",
+            "handoff_authority": "operator-mediated",
+            "selection_policy": "dependency-fifo",
+        },
+        "backlog": {"statuses": DEFAULT_STATUSES},
+    }
+
+
+def seed_scaffold(root: Path) -> list[Path]:
+    created: list[Path] = []
+    root.mkdir(parents=True, exist_ok=True)
+
+    if _write_if_missing(root / "README.md", "# AgentSquad v1\n"):
+        created.append(root / "README.md")
+    if _write_if_missing(root / "backlog.md", backlog_store.render_backlog([])):
+        created.append(root / "backlog.md")
+
+    for file_name, content in STEERING_SEEDS.items():
+        path = root / "steering" / file_name
+        if _write_if_missing(path, content):
+            created.append(path)
+
+    registry_path = root / "agents" / "registry.yaml"
+    if _write_if_missing(registry_path, _registry_seed()):
+        created.append(registry_path)
+
+    for role_id, meta in ROLE_DEFINITIONS.items():
+        role_path = root / "agents" / "roles" / role_id / "agent-role.md"
+        if _write_if_missing(role_path, _role_frontmatter_content(role_id, meta)):
+            created.append(role_path)
+
+    project_config_path = root / "project" / "config" / "project.yaml"
+    if not project_config_path.exists():
+        validators.write_yaml_file(project_config_path, _project_config_seed())
+        created.append(project_config_path)
+
+    project_context_path = root / "project" / "context" / "project-context.md"
+    if _write_if_missing(
+        project_context_path,
+        "# Project Context\n\nUse this file for project-specific context shared by all roles.\n",
+    ):
+        created.append(project_context_path)
+
+    role_overrides_keep = root / "project" / "context" / "role-overrides" / ".gitkeep"
+    if _write_if_missing(role_overrides_keep, "\n"):
+        created.append(role_overrides_keep)
+
+    state_path = root / "project" / "state" / "orchestrator-state.yaml"
+    if not state_path.exists():
+        validators.write_yaml_file(state_path, _default_state())
+        created.append(state_path)
+
+    for role_id, meta in ROLE_DEFINITIONS.items():
+        notes_path = root / "project" / "workspaces" / role_id / "notes.md"
+        if _write_if_missing(
+            notes_path,
+            f"# {meta['display_name']} Notes\n\nProject-specific notes for `{role_id}`.\n",
+        ):
+            created.append(notes_path)
+        runs_keep = root / "project" / "workspaces" / role_id / "runs" / ".gitkeep"
+        if _write_if_missing(runs_keep, "\n"):
+            created.append(runs_keep)
+
+    template_files = {
+        "operator-plan-prompt.md": "Return operator_plan JSON only.\n",
+        "agent-task-prompt.md": "Return agent_result JSON only.\n",
+        "json-contracts.md": "# JSON Contracts\n",
+    }
+    for file_name, content in template_files.items():
+        template_path = root / "runner" / "templates" / file_name
+        if _write_if_missing(template_path, content):
+            created.append(template_path)
+
+    return created
+
+
+def _state_path(root: Path) -> Path:
+    return root / "project" / "state" / "orchestrator-state.yaml"
+
+
+def load_state(root: Path) -> dict[str, Any]:
+    state = _default_state()
+    path = _state_path(root)
+    if not path.exists():
+        return state
+    loaded = validators.load_data_file(path)
+    if not isinstance(loaded, dict):
+        return state
+    state.update(loaded)
+    if not isinstance(state.get("context_manifest"), list):
+        state["context_manifest"] = []
+    if not isinstance(state.get("role_sequence"), list):
+        state["role_sequence"] = []
+    if not isinstance(state.get("history"), list):
+        state["history"] = []
+    return state
+
+
+def save_state(root: Path, state: dict[str, Any]) -> None:
+    validators.write_yaml_file(_state_path(root), state)
+
+
+def halt_with_reason(root: Path, state: dict[str, Any], reason: str) -> None:
+    state["halted"] = True
+    state["halt_reason"] = reason
+    state["history"].append({"ts": utc_now(), "event": "halt", "reason": reason})
+    save_state(root, state)
+
+
+def _render_template(template_text: str, replacements: dict[str, str]) -> str:
+    rendered = template_text
+    for key, value in replacements.items():
+        rendered = rendered.replace(f"{{{{{key}}}}}", value)
+    return rendered
+
+
+def _load_template(root: Path, file_name: str) -> str:
+    return (root / "runner" / "templates" / file_name).read_text(encoding="utf-8")
+
+
+def _load_role_context(root: Path, state: dict[str, Any], role_id: str) -> list[context_loader.ContextEntry]:
+    active_role = state.get("active_role")
+    manifest = state.get("context_manifest", [])
+    if active_role and not manifest:
+        raise OrchestrationHalt(
+            "Context state inconsistent: active_role is set while context_manifest is empty."
+        )
+    if active_role is not None and active_role != role_id:
+        state["active_role"] = None
+        state["context_manifest"] = []
+        if state.get("active_role") is not None:
+            raise OrchestrationHalt("Failed to unload prior role context.")
+
+    built_manifest = context_loader.build_manifest(root, role_id)
+    state["active_role"] = role_id
+    state["context_manifest"] = context_loader.manifest_paths(built_manifest)
+    if state.get("active_role") != role_id or not state.get("context_manifest"):
+        raise OrchestrationHalt("Failed to load role context.")
+    return built_manifest
+
+
+def _invoke_with_retry(
+    adapter,
+    command: str,
+    prompt: str,
+    contract_type: str,
+    statuses: list[str],
+    known_roles: set[str],
+) -> tuple[dict[str, Any], str]:
+    strict_suffix = (
+        "\n\nSTRICT RETRY: return exactly one JSON object with no markdown, no prose, "
+        "and no trailing text."
+    )
+    last_exc: Exception | None = None
+    last_raw = ""
+    for attempt in (1, 2):
+        candidate_prompt = prompt if attempt == 1 else prompt + strict_suffix
+        raw = adapter.invoke(command, candidate_prompt)
+        last_raw = raw
+        try:
+            payload = contracts.parse_json_payload(raw)
+            if contract_type == "operator_plan":
+                return contracts.validate_operator_plan(payload, statuses, known_roles), raw
+            if contract_type == "agent_result":
+                return contracts.validate_agent_result(payload, statuses, known_roles), raw
+            raise ValueError(f"Unknown contract_type '{contract_type}'.")
+        except Exception as exc:  # noqa: BLE001
+            last_exc = exc
+    raise OrchestrationHalt(
+        f"Invalid {contract_type} after one retry: {last_exc}. Raw output: {last_raw}"
+    )
+
+
+def _runtime(root: Path) -> dict[str, Any]:
+    config = validators.load_project_config(root)
+    registry = validators.load_registry(root)
+    roles_map = registry["roles"]
+    known_roles = set(roles_map.keys())
+    enabled_roles = set(config["roles"]["enabled"])
+    disabled_roles = set(config["roles"]["disabled"])
+    statuses = list(config["backlog"]["statuses"])
+    adapter_name = str(config["host"]["primary_adapter"])
+    adapter_command = str(config["host"]["adapter_command"])
+    adapter = build_adapter(adapter_name)
+    return {
+        "config": config,
+        "roles_map": roles_map,
+        "known_roles": known_roles,
+        "enabled_roles": enabled_roles,
+        "disabled_roles": disabled_roles,
+        "statuses": statuses,
+        "adapter": adapter,
+        "adapter_command": adapter_command,
+    }
+
+
+def _upsert_backlog_from_operator(root: Path, plan_payload: dict[str, Any]) -> list[dict[str, Any]]:
+    backlog_path = root / "backlog.md"
+    existing = backlog_store.read_backlog(backlog_path)
+    updated = backlog_store.upsert_tasks(existing, plan_payload["tasks"])
+    backlog_store.write_backlog(backlog_path, updated)
+    return updated
+
+
+def _invoke_operator(
+    root: Path,
+    runtime: dict[str, Any],
+    state: dict[str, Any],
+    human_request: str,
+    mode_label: str,
+) -> list[dict[str, Any]]:
+    backlog_path = root / "backlog.md"
+    current_tasks = backlog_store.read_backlog(backlog_path)
+    backlog_before = backlog_store.render_backlog(current_tasks)
+
+    manifest = _load_role_context(root, state, "operator")
+    context_text = context_loader.compose_context_text(manifest)
+    manifest_text = "\n".join(f"- {path}" for path in context_loader.manifest_paths(manifest))
+    template = _load_template(root, "operator-plan-prompt.md")
+    contracts_doc = _load_template(root, "json-contracts.md")
+
+    prompt = _render_template(
+        template,
+        {
+            "HUMAN_REQUEST": human_request,
+            "BACKLOG_MARKDOWN": backlog_before,
+            "CONTEXT_MANIFEST": manifest_text,
+            "CONTEXT_TEXT": context_text,
+            "JSON_CONTRACTS": contracts_doc,
+        },
+    )
+
+    parsed, raw_output = _invoke_with_retry(
+        runtime["adapter"],
+        runtime["adapter_command"],
+        prompt,
+        "operator_plan",
+        runtime["statuses"],
+        runtime["known_roles"],
+    )
+
+    updated_tasks = _upsert_backlog_from_operator(root, parsed)
+    backlog_after = backlog_store.render_backlog(updated_tasks)
+    state["role_sequence"] = parsed["initial_role_sequence"]
+    state["history"].append(
+        {
+            "ts": utc_now(),
+            "event": "operator-invoke",
+            "mode": mode_label,
+            "tasks_generated": len(parsed["tasks"]),
+        }
+    )
+    logging_store.write_run_journal(
+        root=root,
+        role_id="operator",
+        task_id=f"operator-{mode_label}",
+        prompt_template="operator-plan-prompt.md",
+        context_manifest=context_loader.manifest_paths(manifest),
+        raw_output=raw_output,
+        parsed_result=parsed,
+        backlog_before=backlog_before,
+        backlog_after=backlog_after,
+        events=[f"mode={mode_label}", "operator_plan parsed"],
+    )
+    return updated_tasks
+
+
+def _apply_agent_result(
+    tasks: list[dict[str, Any]],
+    result: dict[str, Any],
+    statuses: list[str],
+    known_roles: set[str],
+) -> list[dict[str, Any]]:
+    status_set = set(statuses)
+    task_id = result["task_id"]
+    target = None
+    for task in tasks:
+        if task["task_id"] == task_id:
+            target = task
+            break
+    if target is None:
+        raise OrchestrationHalt(f"agent_result references unknown task_id '{task_id}'.")
+
+    target["status"] = result["status"]
+    updates = result.get("updates", {})
+    if updates:
+        for key in ("title", "description", "owner", "milestone", "status", "dependencies"):
+            if key not in updates:
+                continue
+            if key == "dependencies":
+                target["dependencies"] = backlog_store.normalize_task(
+                    {"dependencies": updates[key]}
+                )["dependencies"]
+                continue
+            target[key] = str(updates[key]).strip()
+
+    if target["status"] not in status_set:
+        raise OrchestrationHalt(f"Invalid status after updates: '{target['status']}'.")
+    if target["owner"] not in known_roles:
+        raise OrchestrationHalt(f"Invalid owner after updates: '{target['owner']}'.")
+
+    if result.get("new_tasks"):
+        tasks = backlog_store.upsert_tasks(tasks, result["new_tasks"])
+    return tasks
+
+
+def _handle_disabled_owner_if_needed(
+    root: Path,
+    runtime: dict[str, Any],
+    state: dict[str, Any],
+    tasks: list[dict[str, Any]],
+) -> bool:
+    task_index = backlog_store.index_by_task_id(tasks)
+    for task in tasks:
+        if task["status"] not in {"Todo", "In Progress"}:
+            continue
+        if task["owner"] not in runtime["disabled_roles"]:
+            continue
+        if not backlog_store.dependencies_satisfied(task, task_index):
+            continue
+        request = (
+            f"Task '{task['task_id']}' currently owned by disabled role '{task['owner']}'. "
+            "Reassign ownership and update dependencies as needed."
+        )
+        _invoke_operator(root, runtime, state, request, "disabled-owner-mediation")
+        return True
+    return False
+
+
+def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any]) -> bool:
+    backlog_path = root / "backlog.md"
+    tasks = backlog_store.read_backlog(backlog_path)
+    if not tasks:
+        raise OrchestrationHalt("Backlog is empty. Operator must create tasks first.")
+    if backlog_store.all_done(tasks):
+        return False
+
+    if _handle_disabled_owner_if_needed(root, runtime, state, tasks):
+        save_state(root, state)
+        return True
+
+    next_task = backlog_store.select_next_task(
+        tasks=tasks,
+        enabled_roles=runtime["enabled_roles"],
+        role_priority=state.get("role_sequence", []),
+    )
+    if next_task is None:
+        remaining = backlog_store.remaining_not_done(tasks)
+        if remaining:
+            raise OrchestrationHalt(
+                "No executable tasks found. Remaining tasks are blocked by dependencies or role availability."
+            )
+        return False
+
+    task_id = next_task["task_id"]
+    owner = next_task["owner"]
+    if owner not in runtime["enabled_roles"]:
+        raise OrchestrationHalt(
+            f"Task '{task_id}' owner '{owner}' is not enabled and could not be mediated."
+        )
+
+    backlog_before = backlog_store.render_backlog(tasks)
+    if next_task["status"] == "Todo":
+        next_task["status"] = "In Progress"
+        backlog_store.write_backlog(backlog_path, tasks)
+
+    manifest = _load_role_context(root, state, owner)
+    context_text = context_loader.compose_context_text(manifest)
+    manifest_text = "\n".join(f"- {path}" for path in context_loader.manifest_paths(manifest))
+    template = _load_template(root, "agent-task-prompt.md")
+    contracts_doc = _load_template(root, "json-contracts.md")
+    prompt = _render_template(
+        template,
+        {
+            "TASK_JSON": json.dumps(next_task, indent=2),
+            "BACKLOG_MARKDOWN": backlog_before,
+            "CONTEXT_MANIFEST": manifest_text,
+            "CONTEXT_TEXT": context_text,
+            "JSON_CONTRACTS": contracts_doc,
+        },
+    )
+
+    parsed, raw_output = _invoke_with_retry(
+        runtime["adapter"],
+        runtime["adapter_command"],
+        prompt,
+        "agent_result",
+        runtime["statuses"],
+        runtime["known_roles"],
+    )
+
+    updated_tasks = _apply_agent_result(tasks, parsed, runtime["statuses"], runtime["known_roles"])
+    backlog_store.write_backlog(backlog_path, updated_tasks)
+
+    if parsed.get("handoff_request"):
+        handoff = parsed["handoff_request"]
+        request = (
+            f"Handoff requested by '{owner}' for task '{task_id}'. "
+            f"Target role: '{handoff['target_role']}'. Reason: {handoff['reason']}."
+        )
+        updated_tasks = _invoke_operator(root, runtime, state, request, "handoff-mediation")
+        backlog_store.write_backlog(backlog_path, updated_tasks)
+
+    backlog_after = backlog_store.render_backlog(backlog_store.read_backlog(backlog_path))
+    events = [f"task={task_id}", f"owner={owner}", f"status={parsed['status']}"]
+    if parsed.get("handoff_request"):
+        events.append("handoff mediated by operator")
+    logging_store.write_run_journal(
+        root=root,
+        role_id=owner,
+        task_id=task_id,
+        prompt_template="agent-task-prompt.md",
+        context_manifest=context_loader.manifest_paths(manifest),
+        raw_output=raw_output,
+        parsed_result=parsed,
+        backlog_before=backlog_before,
+        backlog_after=backlog_after,
+        events=events,
+    )
+
+    if parsed["status"] == "Done":
+        state["last_completed_task_id"] = task_id
+    state["history"].append(
+        {"ts": utc_now(), "event": "task-step", "task_id": task_id, "owner": owner}
+    )
+    save_state(root, state)
+    return True
+
+
+def execute_loop(root: Path, runtime: dict[str, Any], state: dict[str, Any], max_steps: int | None) -> int:
+    executed = 0
+    while True:
+        if max_steps is not None and executed >= max_steps:
+            break
+        tasks = backlog_store.read_backlog(root / "backlog.md")
+        if tasks and backlog_store.all_done(tasks):
+            state["halted"] = False
+            state["halt_reason"] = ""
+            save_state(root, state)
+            break
+        progressed = execute_one_step(root, runtime, state)
+        if not progressed:
+            break
+        executed += 1
+    return executed
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    root = repo_root()
+    created = seed_scaffold(root)
+    print(f"Initialized scaffold. Created {len(created)} paths.")
+    for path in created:
+        print(path.as_posix())
+    return 0
+
+
+def cmd_validate(args: argparse.Namespace) -> int:
+    root = repo_root()
+    errors = validators.validate_framework(root)
+    if errors:
+        print("Validation failed:")
+        for error in errors:
+            print(f"- {error}")
+        return 1
+    print("Validation passed.")
+    return 0
+
+
+def _prepare_runtime_or_exit(root: Path) -> dict[str, Any]:
+    errors = validators.validate_framework(root)
+    if errors:
+        joined = "\n".join(f"- {item}" for item in errors)
+        raise OrchestrationHalt(f"Validation failed before execution:\n{joined}")
+    return _runtime(root)
+
+
+def cmd_run(args: argparse.Namespace) -> int:
+    root = repo_root()
+    state = load_state(root)
+    state["run_id"] = utc_now()
+    state["halted"] = False
+    state["halt_reason"] = ""
+    state["current_request"] = args.request
+    save_state(root, state)
+
+    try:
+        runtime = _prepare_runtime_or_exit(root)
+        _invoke_operator(root, runtime, state, args.request, "initial-plan")
+        executed = execute_loop(root, runtime, state, max_steps=None)
+        save_state(root, state)
+        print(f"Run completed. Steps executed: {executed}")
+        return 0
+    except KeyboardInterrupt:
+        halt_with_reason(root, state, "Interrupted by user.")
+        print("Run interrupted and state persisted.")
+        return 1
+    except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
+        halt_with_reason(root, state, str(exc))
+        print(f"Run halted: {exc}")
+        return 1
+
+
+def cmd_step(args: argparse.Namespace) -> int:
+    root = repo_root()
+    state = load_state(root)
+    try:
+        runtime = _prepare_runtime_or_exit(root)
+        if not state.get("current_request") and not backlog_store.read_backlog(root / "backlog.md"):
+            raise OrchestrationHalt("No active request and backlog is empty. Use run --request first.")
+        state["halted"] = False
+        state["halt_reason"] = ""
+        save_state(root, state)
+        executed = execute_loop(root, runtime, state, max_steps=1)
+        save_state(root, state)
+        print(f"Step completed. Steps executed: {executed}")
+        return 0
+    except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
+        halt_with_reason(root, state, str(exc))
+        print(f"Step halted: {exc}")
+        return 1
+
+
+def cmd_resume(args: argparse.Namespace) -> int:
+    root = repo_root()
+    state = load_state(root)
+    try:
+        runtime = _prepare_runtime_or_exit(root)
+        state["halted"] = False
+        state["halt_reason"] = ""
+        save_state(root, state)
+        executed = execute_loop(root, runtime, state, max_steps=None)
+        save_state(root, state)
+        print(f"Resume completed. Steps executed: {executed}")
+        return 0
+    except KeyboardInterrupt:
+        halt_with_reason(root, state, "Interrupted by user.")
+        print("Resume interrupted and state persisted.")
+        return 1
+    except (OrchestrationHalt, AdapterError, contracts.ContractError, context_loader.ContextLoadError) as exc:
+        halt_with_reason(root, state, str(exc))
+        print(f"Resume halted: {exc}")
+        return 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="AgentSquad orchestrator CLI")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    init_parser = sub.add_parser("init", help="Create missing scaffold files.")
+    init_parser.set_defaults(func=cmd_init)
+
+    validate_parser = sub.add_parser("validate", help="Validate framework integrity.")
+    validate_parser.set_defaults(func=cmd_validate)
+
+    run_parser = sub.add_parser("run", help="Run full orchestration from a human request.")
+    run_parser.add_argument("--request", required=True, help="Human request text.")
+    run_parser.set_defaults(func=cmd_run)
+
+    step_parser = sub.add_parser("step", help="Execute one orchestration step.")
+    step_parser.set_defaults(func=cmd_step)
+
+    resume_parser = sub.add_parser("resume", help="Resume orchestration from persisted state.")
+    resume_parser.set_defaults(func=cmd_resume)
+
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

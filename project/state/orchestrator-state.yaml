@@ -1,0 +1,10 @@
+run_id: ""
+active_role: null
+context_manifest: []
+role_sequence: []
+last_completed_task_id: ""
+current_request: ""
+halted: false
+halt_reason: ""
+history: []
+
