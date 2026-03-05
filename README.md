@@ -4,6 +4,34 @@ AgentSquad is a non-API orchestration framework for IDE-based agent workflows.
 It separates global framework assets from project-specific state, and runs a
 sequential, operator-mediated execution loop.
 
+## Start a New Project
+
+To use this framework for a new project:
+
+1. Clone this repository into a new project directory.
+2. Open the cloned folder in your IDE agent environment (for example Codex, Roo, or Kiro).
+3. Start a fresh agent thread and paste this prompt:
+
+```text
+Initialize this thread as AgentSquad Operator.
+
+Do the following in order:
+1) Load and apply context from:
+   - steering/00-core-rules.md
+   - steering/01-context-lifecycle.md
+   - steering/02-backlog-governance.md
+   - steering/03-handoff-protocol.md
+   - agents/roles/operator/agent-role.md
+   - project/context/project-context.md
+   - project/context/role-overrides/operator.md (only if it exists)
+2) Validate required files exist; halt and report any missing file.
+3) Read project/config/project.yaml and backlog.md.
+4) Confirm active role is `operator` and summarize operating constraints.
+5) Ask for my project request, then produce `operator_plan` JSON only using runner/templates/json-contracts.md.
+```
+
+After this bootstrap prompt, provide your project request in the next message.
+
 ## Core Ideas
 
 - Global framework assets live under `steering/`, `agents/`, and `superpowers/`.
@@ -45,4 +73,3 @@ The runner passes prompt data through:
 - Referenced superpower IDs are valid.
 - Backlog header matches the required schema.
 - Project config matches required keys and fixed execution policies.
-
