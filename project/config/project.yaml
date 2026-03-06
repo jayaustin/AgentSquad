@@ -14,14 +14,169 @@ roles:
     - operator
     - designer-acquisition
     - designer-engagement
+    - designer-ux
+    - designer-ui
+    - designer-gameplay
+    - designer-economy
+    - designer-monetization
+    - designer-liveops
+    - designer-retention
+    - designer-onboarding
+    - designer-social
+    - designer-community
+    - designer-narrative
+    - designer-level
+    - designer-systems
+    - designer-combat
+    - designer-progression
+    - designer-accessibility
+    - designer-platform-web
+    - designer-platform-mobile
+    - designer-platform-console
+    - ux-researcher-discovery
+    - ux-researcher-usability
+    - ux-researcher-journey
+    - design-systems-designer
+    - interaction-designer
+    - information-architect
     - art-director
+    - visual-designer
+    - concept-artist
+    - technical-artist
+    - sound-designer
+    - audio-director
+    - audio-implementation-designer
+    - composer
+    - voice-over-director
+    - localization-engineer
+    - localization-producer
+    - internationalization-engineer
+    - translation-quality-manager
+    - culturalization-specialist
+    - localization-qa-engineer
+    - audio-localization-engineer
+    - product-spec-writer
+    - feature-spec-writer
+    - ux-spec-writer
+    - gameplay-spec-writer
+    - economy-spec-writer
+    - monetization-spec-writer
+    - liveops-spec-writer
+    - technical-spec-writer
+    - api-spec-writer
+    - integration-spec-writer
+    - security-spec-writer
+    - test-spec-writer
+    - release-spec-writer
+    - nonfunctional-requirements-writer
     - technical-architect
+    - solution-architect-web
+    - solution-architect-mobile
+    - solution-architect-backend
+    - gameplay-architect
+    - economy-architect
+    - systems-architect
+    - data-architect
+    - security-architect
+    - platform-architect
+    - audio-systems-architect
+    - localization-architect
+    - qa-architecture-lead
+    - test-architecture-lead
     - development-engineer-python
     - development-engineer-powershell
+    - development-engineer-c
+    - development-engineer-cpp
+    - development-engineer-csharp
+    - development-engineer-java
+    - development-engineer-kotlin
+    - development-engineer-swift
+    - development-engineer-javascript
+    - development-engineer-typescript
+    - development-engineer-go
+    - development-engineer-rust
+    - development-engineer-php
+    - development-engineer-ruby
+    - development-engineer-scala
+    - development-engineer-web
+    - development-engineer-frontend-react
+    - development-engineer-frontend-vue
+    - development-engineer-frontend-angular
+    - development-engineer-backend-node
+    - development-engineer-backend-dotnet
+    - development-engineer-backend-spring
+    - development-engineer-backend-django
+    - development-engineer-backend-fastapi
+    - development-engineer-mobile-ios
+    - development-engineer-mobile-android
+    - development-engineer-api
+    - development-engineer-database-sql
+    - development-engineer-database-nosql
+    - development-engineer-data-pipeline
+    - development-engineer-integration
+    - development-engineer-devops
+    - development-engineer-ci-cd
+    - development-engineer-observability
+    - development-engineer-performance
+    - development-engineer-unity
+    - development-engineer-unreal
+    - development-engineer-godot
+    - development-engineer-audio
+    - development-engineer-localization
+    - development-engineer-security
+    - development-engineer-python-gameplay
+    - development-engineer-web-acquisition
+    - development-engineer-typescript-engagement
+    - development-engineer-cpp-engine
     - qa-manager
-    - localization-engineer
-    - product-manager
-    - data-analyst
+    - qa-functional
+    - qa-regression
+    - qa-integration
+    - qa-system
+    - qa-end-to-end
+    - qa-automation
+    - qa-performance
+    - qa-load
+    - qa-scalability
+    - qa-reliability
+    - qa-usability
+    - qa-accessibility
+    - qa-compatibility-web
+    - qa-compatibility-mobile
+    - qa-gameplay
+    - qa-economy-balance
+    - qa-monetization
+    - qa-liveops
+    - qa-localization
+    - qa-audio
+    - qa-api
+    - qa-data-quality
+    - qa-security
+    - qa-penetration
+    - qa-compliance
+    - qa-release-readiness
+    - qa-smoke
+    - qa-exploratory
+    - qa-uat-coordinator
+    - security-engineer-application
+    - security-engineer-cloud
+    - security-engineer-infrastructure
+    - security-engineer-identity
+    - security-engineer-devsecops
+    - security-analyst-threat-modeling
+    - security-analyst-vulnerability
+    - security-code-reviewer
+    - security-architecture-reviewer
+    - security-incident-responder
+    - security-penetration-tester
+    - security-compliance-engineer
+    - security-privacy-engineer
+    - security-cryptography-engineer
+    - security-secrets-management-engineer
+    - security-detection-engineer
+    - security-red-team
+    - security-blue-team
+    - security-release-gatekeeper
   disabled: []
 execution:
   mode: sequential
@@ -55,18 +210,11 @@ dashboard:
       - technical
       - architecture
       - spec
-      - product
       - qa
       - localization
+      - ux
+      - audio
+      - security
+      - validation
   agent_colors:
     operator: "#3B82F6"
-    designer-acquisition: "#10B981"
-    designer-engagement: "#F59E0B"
-    art-director: "#F43F5E"
-    technical-architect: "#06B6D4"
-    development-engineer-python: "#8B5CF6"
-    development-engineer-powershell: "#0EA5E9"
-    qa-manager: "#84CC16"
-    localization-engineer: "#F97316"
-    product-manager: "#EC4899"
-    data-analyst: "#14B8A6"

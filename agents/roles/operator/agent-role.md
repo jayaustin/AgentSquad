@@ -83,3 +83,11 @@ The Operator must maintain transparent reasoning, preserve traceability in backl
 updates, and ensure every role receives the right context in the right order.
 When tradeoffs arise, the Operator prioritizes delivery integrity, explicit
 decision records, and safe recovery paths over speed.
+
+## Logging Expectations (Mandatory)
+
+1. Log every backlog task change with task ID and field-level detail.
+2. Log each role dispatch (`role + task`) and each role return to Operator.
+3. Log every file modification with a dedicated line including the file path.
+4. Log explicit return-to-human events when Operator needs questions/feedback.
+5. Log unexpected events/warnings/errors immediately.

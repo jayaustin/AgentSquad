@@ -77,119 +77,7 @@ ROLE_DEFINITIONS: dict[str, dict[str, Any]] = {
         "inputs": ["human_request", "backlog_snapshot", "orchestration_state"],
         "outputs": ["operator_plan", "backlog_updates"],
         "handoff_rules": ["mediate_all_handoffs", "enforce_sequential_execution"],
-    },
-    "designer-acquisition": {
-        "display_name": "Designer Acquisition",
-        "mission": "Optimize design decisions for user acquisition outcomes.",
-        "authority_level": "domain-owner",
-        "must_superpowers": ["brainstorming", "writing-plans"],
-        "optional_superpowers": ["requesting-code-review", "systematic-debugging"],
-        "inputs": ["acquisition_goals", "user_research", "current_experience"],
-        "outputs": ["design_recommendations", "prioritized_tasks"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "designer-engagement": {
-        "display_name": "Designer Engagement",
-        "mission": "Optimize design for sustained user activity and repeat usage.",
-        "authority_level": "domain-owner",
-        "must_superpowers": ["brainstorming", "writing-plans"],
-        "optional_superpowers": ["requesting-code-review", "systematic-debugging"],
-        "inputs": ["engagement_goals", "behavioral_signals", "current_experience"],
-        "outputs": ["engagement_design_recommendations", "prioritized_tasks"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "art-director": {
-        "display_name": "Art Director",
-        "mission": "Maintain artistic coherence and approve visual direction.",
-        "authority_level": "top-level-authority",
-        "must_superpowers": ["brainstorming", "writing-plans"],
-        "optional_superpowers": ["requesting-code-review"],
-        "inputs": ["brand_direction", "visual_assets", "design_proposals"],
-        "outputs": ["art_requirements", "approvals_or_revisions"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "technical-architect": {
-        "display_name": "Technical Architect",
-        "mission": "Define and govern technical architecture and constraints.",
-        "authority_level": "top-level-authority",
-        "must_superpowers": ["brainstorming", "writing-plans", "requesting-code-review"],
-        "optional_superpowers": ["systematic-debugging", "using-git-worktrees"],
-        "inputs": ["product_requirements", "system_constraints", "engineering_feedback"],
-        "outputs": ["architecture_decisions", "technical_task_breakdown"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "development-engineer-python": {
-        "display_name": "Development Engineer Python",
-        "mission": "Implement and maintain Python deliverables with strong quality controls.",
-        "authority_level": "implementation-owner",
-        "must_superpowers": [
-            "test-driven-development",
-            "requesting-code-review",
-            "systematic-debugging",
-        ],
-        "optional_superpowers": ["writing-plans", "subagent-driven-development"],
-        "inputs": ["technical_spec", "assigned_backlog_task", "test_requirements"],
-        "outputs": ["code_changes", "test_results"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "development-engineer-powershell": {
-        "display_name": "Development Engineer PowerShell",
-        "mission": "Implement and maintain PowerShell deliverables with strong quality controls.",
-        "authority_level": "implementation-owner",
-        "must_superpowers": [
-            "test-driven-development",
-            "requesting-code-review",
-            "systematic-debugging",
-        ],
-        "optional_superpowers": ["writing-plans", "subagent-driven-development"],
-        "inputs": ["technical_spec", "assigned_backlog_task", "test_requirements"],
-        "outputs": ["script_changes", "test_results"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "qa-manager": {
-        "display_name": "QA Manager",
-        "mission": "Own validation strategy, test coverage, and release confidence.",
-        "authority_level": "top-level-authority",
-        "must_superpowers": [
-            "test-driven-development",
-            "requesting-code-review",
-            "systematic-debugging",
-        ],
-        "optional_superpowers": ["writing-plans"],
-        "inputs": ["implementation_artifacts", "acceptance_criteria", "risk_assessment"],
-        "outputs": ["validation_results", "release_readiness"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "localization-engineer": {
-        "display_name": "Localization Engineer",
-        "mission": "Define localization strategy and ensure language readiness.",
-        "authority_level": "domain-owner",
-        "must_superpowers": ["brainstorming", "writing-plans", "requesting-code-review"],
-        "optional_superpowers": ["systematic-debugging"],
-        "inputs": ["content_inventory", "target_locales", "release_plan"],
-        "outputs": ["localization_plan", "localization_tasks"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "product-manager": {
-        "display_name": "Product Manager",
-        "mission": "Own product strategy, business priorities, and monetization direction.",
-        "authority_level": "top-level-authority",
-        "must_superpowers": ["brainstorming", "writing-plans"],
-        "optional_superpowers": ["requesting-code-review"],
-        "inputs": ["market_goals", "business_constraints", "user_feedback"],
-        "outputs": ["product_plan", "prioritized_business_tasks"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
-    "data-analyst": {
-        "display_name": "Data Analyst",
-        "mission": "Analyze available data and provide actionable cross-role recommendations.",
-        "authority_level": "domain-owner",
-        "must_superpowers": ["brainstorming", "writing-plans", "systematic-debugging"],
-        "optional_superpowers": ["requesting-code-review"],
-        "inputs": ["analytics_data", "operational_metrics", "experiment_results"],
-        "outputs": ["analytical_findings", "recommended_actions"],
-        "handoff_rules": ["request_operator_mediation_when_blocked"],
-    },
+    }
 }
 
 STEERING_SEEDS = {
@@ -219,7 +107,7 @@ class OrchestrationHalt(RuntimeError):
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def repo_root() -> Path:
@@ -275,16 +163,114 @@ def _role_frontmatter_content(role_id: str, meta: dict[str, Any]) -> str:
     )
 
 
-def _registry_seed() -> str:
+def _seed_role_definitions(root: Path) -> dict[str, dict[str, Any]]:
+    def _normalized_list(value: Any, fallback: list[str]) -> list[str]:
+        if isinstance(value, list):
+            normalized = [str(item).strip() for item in value if str(item).strip()]
+            if normalized:
+                return normalized
+        return list(fallback)
+
+    registry_path = root / "agents" / "registry.yaml"
+    if not registry_path.exists():
+        return dict(ROLE_DEFINITIONS)
+
+    try:
+        registry = validators.load_registry(root)
+    except Exception:  # noqa: BLE001
+        return dict(ROLE_DEFINITIONS)
+
+    roles = registry.get("roles", {})
+    if not isinstance(roles, dict) or not roles:
+        return dict(ROLE_DEFINITIONS)
+
+    definitions: dict[str, dict[str, Any]] = {}
+    for role_id, role_meta in roles.items():
+        role_key = str(role_id).strip()
+        if not role_key:
+            continue
+        role_meta_dict = role_meta if isinstance(role_meta, dict) else {}
+        role_file = str(role_meta_dict.get("role_file", "")).strip()
+        role_path = root / role_file if role_file else root / "agents" / "roles" / role_key / "agent-role.md"
+        frontmatter = validators.extract_frontmatter(role_path) if role_path.exists() else {}
+        if not isinstance(frontmatter, dict):
+            frontmatter = {}
+
+        fallback_meta = ROLE_DEFINITIONS.get(role_key, {})
+        display_name = str(
+            role_meta_dict.get(
+                "display_name",
+                frontmatter.get(
+                    "display_name",
+                    fallback_meta.get("display_name", role_key.replace("-", " ").title()),
+                ),
+            )
+        ).strip() or role_key.replace("-", " ").title()
+
+        definition = {
+            "display_name": display_name,
+            "mission": str(
+                frontmatter.get(
+                    "mission",
+                    fallback_meta.get(
+                        "mission",
+                        "Define role mission and execution boundaries for assigned work.",
+                    ),
+                )
+            ).strip()
+            or "Define role mission and execution boundaries for assigned work.",
+            "authority_level": str(
+                frontmatter.get(
+                    "authority_level",
+                    fallback_meta.get("authority_level", "domain-owner"),
+                )
+            ).strip()
+            or "domain-owner",
+            "must_superpowers": _normalized_list(
+                frontmatter.get("must_superpowers"),
+                list(fallback_meta.get("must_superpowers", ["brainstorming", "writing-plans"])),
+            ),
+            "optional_superpowers": _normalized_list(
+                frontmatter.get("optional_superpowers"),
+                list(fallback_meta.get("optional_superpowers", ["requesting-code-review"])),
+            ),
+            "inputs": _normalized_list(
+                frontmatter.get("inputs"),
+                list(fallback_meta.get("inputs", ["assigned_backlog_task"])),
+            ),
+            "outputs": _normalized_list(
+                frontmatter.get("outputs"),
+                list(fallback_meta.get("outputs", ["task_updates"])),
+            ),
+            "handoff_rules": _normalized_list(
+                frontmatter.get("handoff_rules"),
+                list(
+                    fallback_meta.get(
+                        "handoff_rules",
+                        ["request_operator_mediation_when_blocked"],
+                    )
+                ),
+            ),
+        }
+        definitions[role_key] = definition
+
+    if not definitions:
+        return dict(ROLE_DEFINITIONS)
+    if "operator" not in definitions:
+        definitions["operator"] = dict(ROLE_DEFINITIONS["operator"])
+    return definitions
+
+
+def _registry_seed(role_definitions: dict[str, dict[str, Any]]) -> str:
     lines = ["roles:"]
-    for role_id, meta in ROLE_DEFINITIONS.items():
+    for role_id, meta in role_definitions.items():
         lines.append(f"  {role_id}:")
         lines.append(f"    display_name: {meta['display_name']}")
         lines.append(f"    role_file: agents/roles/{role_id}/agent-role.md")
     return "\n".join(lines) + "\n"
 
 
-def _project_config_seed() -> dict[str, Any]:
+def _project_config_seed(role_definitions: dict[str, dict[str, Any]]) -> dict[str, Any]:
     return {
         "project": {"id": "sample-project", "name": "Sample Project"},
         "host": {
@@ -297,7 +283,7 @@ def _project_config_seed() -> dict[str, Any]:
                 "force_reload_on_context_change": True,
             },
         },
-        "roles": {"enabled": list(ROLE_DEFINITIONS.keys()), "disabled": []},
+        "roles": {"enabled": list(role_definitions.keys()), "disabled": []},
         "execution": {
             "mode": "sequential",
             "handoff_authority": "operator-mediated",
@@ -311,6 +297,7 @@ def _project_config_seed() -> dict[str, Any]:
 def seed_scaffold(root: Path) -> list[Path]:
     created: list[Path] = []
     root.mkdir(parents=True, exist_ok=True)
+    role_definitions = _seed_role_definitions(root)
 
     if _write_if_missing(root / "README.md", "# AgentSquad v1\n"):
         created.append(root / "README.md")
@@ -323,17 +310,17 @@ def seed_scaffold(root: Path) -> list[Path]:
             created.append(path)
 
     registry_path = root / "agents" / "registry.yaml"
-    if _write_if_missing(registry_path, _registry_seed()):
+    if _write_if_missing(registry_path, _registry_seed(role_definitions)):
         created.append(registry_path)
 
-    for role_id, meta in ROLE_DEFINITIONS.items():
+    for role_id, meta in role_definitions.items():
         role_path = root / "agents" / "roles" / role_id / "agent-role.md"
         if _write_if_missing(role_path, _role_frontmatter_content(role_id, meta)):
             created.append(role_path)
 
     project_config_path = root / "project" / "config" / "project.yaml"
     if not project_config_path.exists():
-        validators.write_yaml_file(project_config_path, _project_config_seed())
+        validators.write_yaml_file(project_config_path, _project_config_seed(role_definitions))
         created.append(project_config_path)
 
     project_context_path = root / "project" / "context" / "project-context.md"
@@ -355,7 +342,7 @@ def seed_scaffold(root: Path) -> list[Path]:
     if _write_if_missing(activity_log_path, ""):
         created.append(activity_log_path)
 
-    for role_id, meta in ROLE_DEFINITIONS.items():
+    for role_id, meta in role_definitions.items():
         notes_path = root / "project" / "workspaces" / role_id / "notes.md"
         if _write_if_missing(
             notes_path,
@@ -415,6 +402,25 @@ def halt_with_reason(root: Path, state: dict[str, Any], reason: str) -> None:
     state["halted"] = True
     state["halt_reason"] = reason
     state["history"].append({"ts": utc_now(), "event": "halt", "reason": reason})
+    active_role = str(state.get("active_role") or "operator").strip() or "operator"
+    known_roles = set(ROLE_DEFINITIONS.keys())
+    try:
+        registry_roles = validators.load_registry(root).get("roles", {})
+        if isinstance(registry_roles, dict) and registry_roles:
+            known_roles = set(registry_roles.keys())
+    except Exception:  # noqa: BLE001
+        pass
+    if active_role not in known_roles:
+        active_role = "operator"
+    logging_store.write_activity_event(
+        root=root,
+        role_id=active_role,
+        task_id="",
+        event_type="unexpected_halt",
+        summary=f"Orchestration halted unexpectedly: {reason}",
+        status="Error",
+        metadata={"source": "orchestrator"},
+    )
     save_state(root, state)
 
 
@@ -427,6 +433,262 @@ def _render_template(template_text: str, replacements: dict[str, str]) -> str:
 
 def _load_template(root: Path, file_name: str) -> str:
     return (root / "runner" / "templates" / file_name).read_text(encoding="utf-8")
+
+
+def _safe_segment(value: str) -> str:
+    return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in value).strip("-")
+
+
+def _clone_tasks(tasks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    clone: list[dict[str, Any]] = []
+    for task in tasks:
+        item = dict(task)
+        item["dependencies"] = list(task.get("dependencies", []))
+        clone.append(item)
+    return clone
+
+
+def _dependencies_text(value: Any) -> str:
+    deps = backlog_store.normalize_task({"dependencies": value})["dependencies"]
+    return ", ".join(deps) if deps else "(none)"
+
+
+def _describe_task_changes(
+    before: list[dict[str, Any]],
+    after: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    before_map = {task["task_id"]: task for task in before}
+    changes: list[dict[str, Any]] = []
+    tracked_fields = ("title", "description", "owner", "milestone", "status", "dependencies")
+
+    for task in after:
+        task_id = task["task_id"]
+        previous = before_map.get(task_id)
+        if previous is None:
+            detail = (
+                f"created '{task_id}' "
+                f"(owner={task['owner']}, status={task['status']}, milestone={task['milestone']}, "
+                f"dependencies={_dependencies_text(task['dependencies'])})"
+            )
+            changes.append(
+                {
+                    "task_id": task_id,
+                    "action": "created",
+                    "detail": detail,
+                    "field_changes": {},
+                }
+            )
+            continue
+
+        field_changes: dict[str, dict[str, str]] = {}
+        details: list[str] = []
+        for field in tracked_fields:
+            before_value: Any = previous.get(field, "")
+            after_value: Any = task.get(field, "")
+            if field == "dependencies":
+                before_text = _dependencies_text(before_value)
+                after_text = _dependencies_text(after_value)
+                if before_text == after_text:
+                    continue
+                field_changes[field] = {"before": before_text, "after": after_text}
+                details.append(f"dependencies {before_text} -> {after_text}")
+            else:
+                before_text = str(before_value).strip()
+                after_text = str(after_value).strip()
+                if before_text == after_text:
+                    continue
+                field_changes[field] = {"before": before_text, "after": after_text}
+                details.append(f"{field} '{before_text}' -> '{after_text}'")
+        if field_changes:
+            changes.append(
+                {
+                    "task_id": task_id,
+                    "action": "updated",
+                    "detail": f"updated '{task_id}': " + "; ".join(details),
+                    "field_changes": field_changes,
+                }
+            )
+    return changes
+
+
+def _capture_file_snapshot(root: Path) -> dict[str, tuple[int, int]]:
+    snapshot: dict[str, tuple[int, int]] = {}
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel.startswith(".git/"):
+            continue
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        snapshot[rel] = (int(stat.st_size), int(stat.st_mtime_ns))
+    return snapshot
+
+
+def _diff_file_snapshots(
+    before: dict[str, tuple[int, int]],
+    after: dict[str, tuple[int, int]],
+) -> dict[str, list[str]]:
+    before_keys = set(before.keys())
+    after_keys = set(after.keys())
+    created = sorted(after_keys - before_keys)
+    deleted = sorted(before_keys - after_keys)
+    modified = sorted(key for key in (before_keys & after_keys) if before[key] != after[key])
+    return {"created": created, "modified": modified, "deleted": deleted}
+
+
+def _emit_file_change_logs(
+    root: Path,
+    role_id: str,
+    task_id: str,
+    file_changes: dict[str, list[str]],
+    reason: str,
+) -> list[str]:
+    events: list[str] = []
+    for action in ("created", "modified", "deleted"):
+        for rel_path in file_changes.get(action, []):
+            line = f"file_{action}: `{rel_path}` ({reason})"
+            events.append(line)
+            logging_store.write_activity_event(
+                root=root,
+                role_id=role_id,
+                task_id=task_id,
+                event_type=f"file_{action}",
+                summary=f"{role_id} {action} file '{rel_path}'.",
+                status="Logged",
+                metadata={"path": rel_path, "reason": reason},
+            )
+    return events
+
+
+def _append_notes_update(root: Path, role_id: str, task_id: str, note_text: str) -> str:
+    cleaned = str(note_text or "").strip()
+    if not cleaned:
+        return ""
+    workspace = logging_store.ensure_workspace(root, role_id)
+    notes_path = workspace / "notes.md"
+    lines = [
+        "",
+        f"## {utc_now()} ({task_id})",
+        "",
+        cleaned,
+        "",
+    ]
+    with notes_path.open("a", encoding="utf-8") as handle:
+        handle.write("\n".join(lines))
+    return notes_path.relative_to(root).as_posix()
+
+
+def _write_feedback_file(
+    root: Path,
+    source_role: str,
+    task_id: str,
+    audience: str,
+    summary: str,
+    questions: list[str],
+    target_role: str = "",
+    requested_action: str = "",
+    related_task_ids: list[str] | None = None,
+    requires_response: bool = False,
+) -> str:
+    workspace = logging_store.ensure_workspace(root, source_role)
+    feedback_dir = workspace / "feedback"
+    feedback_dir.mkdir(parents=True, exist_ok=True)
+
+    safe_task = _safe_segment(task_id or "no-task") or "no-task"
+    target_segment = _safe_segment(target_role or audience) or "target"
+    timestamp = logging_store.filename_timestamp_now()
+    file_name = f"{timestamp}-{safe_task}-to-{target_segment}.md"
+    path = feedback_dir / file_name
+    suffix = 1
+    while path.exists():
+        file_name = f"{timestamp}-{safe_task}-to-{target_segment}-{suffix}.md"
+        path = feedback_dir / file_name
+        suffix += 1
+
+    lines: list[str] = []
+    lines.append(f"# Feedback: {source_role} -> {target_role or audience}")
+    lines.append("")
+    lines.append(f"- Timestamp: `{utc_now()}`")
+    lines.append(f"- Source Role: `{source_role}`")
+    lines.append(f"- Task ID: `{task_id}`")
+    lines.append(f"- Audience: `{audience}`")
+    if target_role:
+        lines.append(f"- Target Role: `{target_role}`")
+    lines.append(f"- Requires Response: `{str(bool(requires_response)).lower()}`")
+    if related_task_ids:
+        lines.append(f"- Related Tasks: `{', '.join(related_task_ids)}`")
+    lines.append("")
+    lines.append("## Summary")
+    lines.append("")
+    lines.append(summary.strip() or "No summary provided.")
+    lines.append("")
+    if questions:
+        lines.append("## Questions")
+        lines.append("")
+        for question in questions:
+            lines.append(f"- {question}")
+        lines.append("")
+    if requested_action:
+        lines.append("## Requested Action")
+        lines.append("")
+        lines.append(requested_action.strip())
+        lines.append("")
+
+    path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    return path.relative_to(root).as_posix()
+
+
+def _emit_decision_logs(
+    root: Path,
+    role_id: str,
+    task_id: str,
+    decisions: list[str],
+) -> list[str]:
+    events: list[str] = []
+    for decision in decisions:
+        cleaned = str(decision).strip()
+        if not cleaned:
+            continue
+        line = f"decision: {cleaned}"
+        events.append(line)
+        logging_store.write_activity_event(
+            root=root,
+            role_id=role_id,
+            task_id=task_id,
+            event_type="decision_note",
+            summary=cleaned,
+            status="Logged",
+            metadata={},
+        )
+    return events
+
+
+def _emit_unexpected_logs(
+    root: Path,
+    role_id: str,
+    task_id: str,
+    unexpected_entries: list[str],
+) -> list[str]:
+    events: list[str] = []
+    for item in unexpected_entries:
+        cleaned = str(item).strip()
+        if not cleaned:
+            continue
+        line = f"unexpected: {cleaned}"
+        events.append(line)
+        logging_store.write_activity_event(
+            root=root,
+            role_id=role_id,
+            task_id=task_id,
+            event_type="unexpected_event",
+            summary=cleaned,
+            status="Warning",
+            metadata={},
+        )
+    return events
 
 
 def _parse_utc(value: str | None) -> datetime | None:
@@ -672,8 +934,26 @@ def _render_dashboard_best_effort(
             return
         output_path = dashboard.render_dashboard(root)
         print(f"Dashboard updated ({trigger}): {output_path.as_posix()}")
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id="",
+            event_type="file_modified",
+            summary=f"Operator regenerated dashboard file '{output_path.relative_to(root).as_posix()}'.",
+            status="Logged",
+            metadata={"trigger": trigger, "path": output_path.relative_to(root).as_posix()},
+        )
     except Exception as exc:  # noqa: BLE001
         print(f"Dashboard render warning ({trigger}): {exc}")
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id="",
+            event_type="unexpected_event",
+            summary=f"Dashboard render warning ({trigger}): {exc}",
+            status="Warning",
+            metadata={"trigger": trigger},
+        )
 
 
 def _is_value_defined(raw_value: str) -> bool:
@@ -882,10 +1162,11 @@ def cmd_bootstrap_operator(args: argparse.Namespace) -> int:
 
 
 def _upsert_backlog_from_operator(
-    root: Path, plan_payload: dict[str, Any]
+    root: Path,
+    existing: list[dict[str, Any]],
+    plan_payload: dict[str, Any],
 ) -> tuple[list[dict[str, Any]], bool]:
     backlog_path = root / "backlog.md"
-    existing = backlog_store.read_backlog(backlog_path)
     before_render = backlog_store.render_backlog(existing)
     updated = backlog_store.upsert_tasks(existing, plan_payload["tasks"])
     after_render = backlog_store.render_backlog(updated)
@@ -904,6 +1185,7 @@ def _invoke_operator(
 ) -> list[dict[str, Any]]:
     backlog_path = root / "backlog.md"
     current_tasks = backlog_store.read_backlog(backlog_path)
+    current_tasks_snapshot = _clone_tasks(current_tasks)
     backlog_before = backlog_store.render_backlog(current_tasks)
 
     manifest = _load_role_context(root, state, "operator")
@@ -936,6 +1218,7 @@ def _invoke_operator(
         },
     )
 
+    before_files = _capture_file_snapshot(root)
     parsed, raw_output, session_events = _invoke_with_retry(
         runtime=runtime,
         state=state,
@@ -947,14 +1230,22 @@ def _invoke_operator(
         context_hash=context_hash,
         session_plan=session_plan,
     )
+    after_files = _capture_file_snapshot(root)
+    invocation_file_changes = _diff_file_snapshots(before_files, after_files)
 
-    updated_tasks, backlog_changed = _upsert_backlog_from_operator(root, parsed)
+    updated_tasks, backlog_changed = _upsert_backlog_from_operator(
+        root,
+        current_tasks,
+        parsed,
+    )
     if not backlog_changed:
         raise OrchestrationHalt(
             "Operator plan rejected: backlog.md was not modified. "
             "Operator must return an operator_plan that creates or updates at least one backlog task."
         )
+
     backlog_after = backlog_store.render_backlog(updated_tasks)
+    backlog_task_changes = _describe_task_changes(current_tasks_snapshot, updated_tasks)
     state["role_sequence"] = parsed["initial_role_sequence"]
     state["history"].append(
         {
@@ -964,6 +1255,98 @@ def _invoke_operator(
             "tasks_generated": len(parsed["tasks"]),
         }
     )
+
+    run_events: list[str] = [f"mode={mode_label}", "operator_plan parsed"]
+    run_events.extend(session_events)
+    run_events.extend(
+        _emit_file_change_logs(
+            root=root,
+            role_id="operator",
+            task_id=f"operator-{mode_label}",
+            file_changes=invocation_file_changes,
+            reason="during operator thread invocation",
+        )
+    )
+    run_events.extend(
+        _emit_decision_logs(
+            root=root,
+            role_id="operator",
+            task_id=f"operator-{mode_label}",
+            decisions=parsed.get("decision_log", []),
+        )
+    )
+    run_events.extend(
+        _emit_unexpected_logs(
+            root=root,
+            role_id="operator",
+            task_id=f"operator-{mode_label}",
+            unexpected_entries=parsed.get("unexpected_events", []),
+        )
+    )
+
+    for change in backlog_task_changes:
+        detail = change["detail"]
+        run_events.append(f"backlog_change: {detail}")
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=change["task_id"],
+            event_type="backlog_task_update",
+            summary=f"Operator {detail}",
+            status="Planned",
+            metadata={
+                "mode": mode_label,
+                "action": change["action"],
+                "field_changes": change["field_changes"],
+            },
+        )
+
+    run_events.append("file_modified: `backlog.md` (operator persisted plan/task updates)")
+    logging_store.write_activity_event(
+        root=root,
+        role_id="operator",
+        task_id=f"operator-{mode_label}",
+        event_type="file_modified",
+        summary="Operator modified file 'backlog.md' while persisting operator_plan.",
+        status="Logged",
+        metadata={"path": "backlog.md", "mode": mode_label},
+    )
+
+    human_feedback = parsed.get("human_feedback")
+    if human_feedback:
+        feedback_path = _write_feedback_file(
+            root=root,
+            source_role="operator",
+            task_id=f"operator-{mode_label}",
+            audience="human",
+            summary=human_feedback.get("summary", ""),
+            questions=human_feedback.get("questions", []),
+            requires_response=bool(human_feedback.get("requires_response", False)),
+        )
+        run_events.append(
+            "return_to_human: operator requested questions/feedback "
+            f"via `{feedback_path}`"
+        )
+        run_events.append(f"file_modified: `{feedback_path}` (operator feedback artifact)")
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=f"operator-{mode_label}",
+            event_type="operator_human_feedback",
+            summary="Operator returned to human for questions/feedback.",
+            status="Needs Input",
+            metadata={"path": feedback_path, "feedback": human_feedback},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=f"operator-{mode_label}",
+            event_type="file_modified",
+            summary=f"Operator modified file '{feedback_path}' for human feedback.",
+            status="Logged",
+            metadata={"path": feedback_path},
+        )
+
     logging_store.write_run_journal(
         root=root,
         role_id="operator",
@@ -974,11 +1357,15 @@ def _invoke_operator(
         parsed_result=parsed,
         backlog_before=backlog_before,
         backlog_after=backlog_after,
-        events=[f"mode={mode_label}", "operator_plan parsed"] + session_events,
+        events=run_events,
         event_type="operator_plan",
         summary=parsed.get("summary") or f"Operator created plan for mode '{mode_label}'.",
         status="Planned",
-        metadata={"mode": mode_label, "tasks_generated": len(parsed.get("tasks", []))},
+        metadata={
+            "mode": mode_label,
+            "tasks_generated": len(parsed.get("tasks", [])),
+            "backlog_task_changes": backlog_task_changes,
+        },
     )
     _render_dashboard_best_effort(root, runtime, f"operator-{mode_label}")
     return updated_tasks
@@ -1113,8 +1500,30 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
 
     backlog_before = backlog_store.render_backlog(tasks)
     if next_task["status"] == "Todo":
+        previous_status = next_task["status"]
         next_task["status"] = "In Progress"
         backlog_store.write_backlog(backlog_path, tasks)
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=task_id,
+            event_type="backlog_task_update",
+            summary=(
+                f"Operator updated '{task_id}' status "
+                f"from '{previous_status}' to 'In Progress' for execution dispatch."
+            ),
+            status="In Progress",
+            metadata={"field_changes": {"status": {"before": previous_status, "after": "In Progress"}}},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=task_id,
+            event_type="file_modified",
+            summary="Operator modified file 'backlog.md' while dispatching next task.",
+            status="Logged",
+            metadata={"path": "backlog.md"},
+        )
 
     manifest = _load_role_context(root, state, owner)
     context_hash = context_loader.manifest_hash(manifest)
@@ -1145,6 +1554,17 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
         },
     )
 
+    logging_store.write_activity_event(
+        root=root,
+        role_id="operator",
+        task_id=task_id,
+        event_type="operator_role_invoke",
+        summary=f"Operator invoked role '{owner}' for task '{task_id}'.",
+        status="In Progress",
+        metadata={"target_role": owner},
+    )
+
+    before_files = _capture_file_snapshot(root)
     parsed, raw_output, session_events = _invoke_with_retry(
         runtime=runtime,
         state=state,
@@ -1156,9 +1576,184 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
         context_hash=context_hash,
         session_plan=session_plan,
     )
+    after_files = _capture_file_snapshot(root)
+    invocation_file_changes = _diff_file_snapshots(before_files, after_files)
 
+    logging_store.write_activity_event(
+        root=root,
+        role_id="operator",
+        task_id=task_id,
+        event_type="operator_role_return",
+        summary=(
+            f"Role '{owner}' handed control back to Operator for task '{task_id}' "
+            f"with status '{parsed['status']}'."
+        ),
+        status=parsed.get("status", ""),
+        metadata={
+            "target_role": owner,
+            "role_summary": parsed.get("summary", ""),
+            "handoff_requested": bool(parsed.get("handoff_request")),
+        },
+    )
+
+    tasks_before_apply = _clone_tasks(tasks)
     updated_tasks = _apply_agent_result(tasks, parsed, runtime["statuses"], runtime["known_roles"])
     backlog_store.write_backlog(backlog_path, updated_tasks)
+    backlog_task_changes = _describe_task_changes(tasks_before_apply, updated_tasks)
+    for change in backlog_task_changes:
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=change["task_id"],
+            event_type="backlog_task_update",
+            summary=f"{owner} {change['detail']}",
+            status=parsed.get("status", ""),
+            metadata={
+                "action": change["action"],
+                "field_changes": change["field_changes"],
+            },
+        )
+    logging_store.write_activity_event(
+        root=root,
+        role_id=owner,
+        task_id=task_id,
+        event_type="file_modified",
+        summary=f"{owner} modified file 'backlog.md' through agent_result persistence.",
+        status="Logged",
+        metadata={"path": "backlog.md"},
+    )
+
+    notes_events: list[str] = []
+    notes_path = _append_notes_update(root, owner, task_id, parsed.get("notes_update", ""))
+    if notes_path:
+        notes_events.append(f"notes_update: wrote `{notes_path}`")
+        notes_events.append(f"file_modified: `{notes_path}` (notes update)")
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="notes_update",
+            summary=f"{owner} appended task notes to '{notes_path}'.",
+            status="Logged",
+            metadata={"path": notes_path},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="file_modified",
+            summary=f"{owner} modified file '{notes_path}' while writing notes_update.",
+            status="Logged",
+            metadata={"path": notes_path},
+        )
+
+    feedback_events: list[str] = []
+    human_feedback = parsed.get("human_feedback")
+    if human_feedback:
+        human_feedback_path = _write_feedback_file(
+            root=root,
+            source_role=owner,
+            task_id=task_id,
+            audience="human",
+            summary=human_feedback.get("summary", ""),
+            questions=human_feedback.get("questions", []),
+            requires_response=bool(human_feedback.get("requires_response", False)),
+        )
+        feedback_events.append(
+            "feedback_to_human: wrote "
+            f"`{human_feedback_path}` and returned for questions/feedback"
+        )
+        feedback_events.append(
+            f"file_modified: `{human_feedback_path}` (human feedback artifact)"
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="human_feedback_written",
+            summary=f"{owner} wrote human feedback/questions to '{human_feedback_path}'.",
+            status="Needs Input",
+            metadata={"path": human_feedback_path, "feedback": human_feedback},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="file_modified",
+            summary=f"{owner} modified file '{human_feedback_path}' for human feedback.",
+            status="Logged",
+            metadata={"path": human_feedback_path},
+        )
+
+    role_feedback_entries = parsed.get("role_feedback", [])
+    for role_feedback in role_feedback_entries:
+        target_role = role_feedback.get("target_role", "")
+        if target_role == owner:
+            feedback_events.append(
+                f"unexpected: ignored role_feedback targeting self role '{owner}'"
+            )
+            logging_store.write_activity_event(
+                root=root,
+                role_id=owner,
+                task_id=task_id,
+                event_type="unexpected_event",
+                summary=f"Ignored role_feedback targeting same role '{owner}'.",
+                status="Warning",
+                metadata={"role_feedback": role_feedback},
+            )
+            continue
+
+        role_feedback_path = _write_feedback_file(
+            root=root,
+            source_role=owner,
+            task_id=task_id,
+            audience="role",
+            target_role=target_role,
+            summary=role_feedback.get("summary", ""),
+            questions=role_feedback.get("questions", []),
+            requested_action=role_feedback.get("requested_action", ""),
+            related_task_ids=role_feedback.get("related_task_ids", []),
+            requires_response=True,
+        )
+        feedback_events.append(
+            f"feedback_to_role: wrote `{role_feedback_path}` for `{target_role}`"
+        )
+        feedback_events.append(
+            f"file_modified: `{role_feedback_path}` (role feedback artifact)"
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="role_feedback_written",
+            summary=(
+                f"{owner} wrote role feedback for '{target_role}' "
+                f"to '{role_feedback_path}'."
+            ),
+            status="Needs Review",
+            metadata={"path": role_feedback_path, "role_feedback": role_feedback},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            event_type="file_modified",
+            summary=f"{owner} modified file '{role_feedback_path}' for role feedback.",
+            status="Logged",
+            metadata={"path": role_feedback_path},
+        )
+        logging_store.write_activity_event(
+            root=root,
+            role_id="operator",
+            task_id=task_id,
+            event_type="operator_role_feedback_received",
+            summary=(
+                f"Operator received feedback relay from '{owner}' to '{target_role}'. "
+                f"See '{role_feedback_path}'."
+            ),
+            status="Queued",
+            metadata={"path": role_feedback_path, "source_role": owner, "target_role": target_role},
+        )
 
     if parsed.get("handoff_request"):
         handoff = parsed["handoff_request"]
@@ -1171,6 +1766,36 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
 
     backlog_after = backlog_store.render_backlog(backlog_store.read_backlog(backlog_path))
     events = [f"task={task_id}", f"owner={owner}", f"status={parsed['status']}"]
+    events.extend(
+        _emit_file_change_logs(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            file_changes=invocation_file_changes,
+            reason="during role thread invocation",
+        )
+    )
+    events.extend(
+        _emit_decision_logs(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            decisions=parsed.get("decision_log", []),
+        )
+    )
+    events.extend(
+        _emit_unexpected_logs(
+            root=root,
+            role_id=owner,
+            task_id=task_id,
+            unexpected_entries=parsed.get("unexpected_events", []),
+        )
+    )
+    for change in backlog_task_changes:
+        events.append(f"backlog_change: {change['detail']}")
+    events.append("file_modified: `backlog.md` (agent_result persisted)")
+    events.extend(notes_events)
+    events.extend(feedback_events)
     if parsed.get("handoff_request"):
         events.append("handoff mediated by operator")
     events.extend(session_events)
@@ -1188,7 +1813,12 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
         event_type="agent_result",
         summary=parsed.get("summary") or f"{owner} updated task '{task_id}'.",
         status=parsed.get("status", ""),
-        metadata={"handoff_requested": bool(parsed.get("handoff_request"))},
+        metadata={
+            "handoff_requested": bool(parsed.get("handoff_request")),
+            "backlog_task_changes": backlog_task_changes,
+            "role_feedback_count": len(role_feedback_entries),
+            "human_feedback": bool(human_feedback),
+        },
     )
 
     if parsed["status"] == "Done":

@@ -176,6 +176,9 @@
       padding: 7px 9px;
       min-width: 180px;
     }
+    .muted-text {
+      color: var(--muted);
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -212,6 +215,14 @@
       border-radius: 10px;
       padding: 10px;
     }
+    .event.error {
+      border-color: #7f1d1d;
+      background: rgba(127, 29, 29, 0.26);
+    }
+    .event.warning {
+      border-color: #7c4a03;
+      background: rgba(124, 74, 3, 0.22);
+    }
     .event-head {
       display: flex;
       justify-content: space-between;
@@ -237,6 +248,40 @@
     .event-meta {
       color: var(--muted);
       font-size: 0.8rem;
+    }
+    .event-badge {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .event-badge.error {
+      background: #dc2626;
+      color: #fee2e2;
+    }
+    .event-badge.warning {
+      background: #d97706;
+      color: #ffedd5;
+    }
+    .task-deliverables {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
+    }
+    .task-deliverables details {
+      width: 100%;
+    }
+    .task-deliverables summary {
+      cursor: pointer;
+      color: #bae6fd;
+    }
+    .task-deliverables-list {
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 6px;
     }
     .agent-layout {
       display: grid;
@@ -377,7 +422,19 @@
       { id: "activity", label: "Activity Log" },
       { id: "agents", label: "Agents" }
     ];
-    const TASK_COLUMNS = ["task_id", "title", "description", "owner", "milestone", "status", "dependencies"];
+    const STORAGE_KEYS = {
+      activeTab: "agentsquad.dashboard.activeTopTab"
+    };
+    const TASK_COLUMNS = [
+      "task_id",
+      "title",
+      "description",
+      "owner",
+      "milestone",
+      "status",
+      "dependencies",
+      "deliverables"
+    ];
     const TASK_LABELS = {
       task_id: "Task ID",
       title: "Title",
@@ -385,8 +442,12 @@
       owner: "Owner",
       milestone: "Milestone",
       status: "Status",
-      dependencies: "Dependencies"
+      dependencies: "Dependencies",
+      deliverables: "Deliverables"
     };
+    const DELIVERABLE_COLLAPSE_THRESHOLD = 14;
+    const DELIVERABLE_PREVIEW_COUNT = 8;
+    const REPO_ROOT_PREFIX = String(DATA.repo_root_relative_prefix || ".").replaceAll("\\", "/");
 
     let activeTab = "project";
     let activeDocId = null;
@@ -401,8 +462,302 @@
         .replaceAll(">", "&gt;");
     }
 
+    function safeStorageGet(key) {
+      try {
+        return window.localStorage.getItem(key);
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function safeStorageSet(key, value) {
+      try {
+        window.localStorage.setItem(key, value);
+      } catch (error) {
+        return;
+      }
+    }
+
     function roleColor(roleId) {
       return DATA.agent_colors[roleId] || "#60A5FA";
+    }
+
+    function normalizePath(path) {
+      return String(path ?? "")
+        .trim()
+        .replaceAll("\\", "/")
+        .replace(/^\.\/+/, "")
+        .replace(/^\/+/, "")
+        .replace(/\/+/g, "/");
+    }
+
+    const KNOWN_FILES = Array.isArray(DATA.known_files) ? DATA.known_files.map(normalizePath) : [];
+    const KNOWN_FILE_SET = new Set(KNOWN_FILES);
+    const BASENAME_INDEX = buildBasenameIndex(KNOWN_FILES);
+
+    function buildBasenameIndex(paths) {
+      const index = {};
+      paths.forEach(path => {
+        const normalized = normalizePath(path);
+        if (!normalized) {
+          return;
+        }
+        const basename = normalized.split("/").pop();
+        if (!basename) {
+          return;
+        }
+        if (!index[basename]) {
+          index[basename] = [];
+        }
+        index[basename].push(normalized);
+      });
+      return index;
+    }
+
+    function fileHref(path) {
+      const normalized = normalizePath(path);
+      if (!normalized) {
+        return "#";
+      }
+      const encodedPath = normalized.split("/").map(encodeURIComponent).join("/");
+      const prefix = REPO_ROOT_PREFIX === "." ? "./" : REPO_ROOT_PREFIX.replace(/\/+$/, "") + "/";
+      return prefix + encodedPath;
+    }
+
+    function fileLinkHtml(path, label) {
+      const normalized = normalizePath(path);
+      if (!normalized) {
+        return esc(label || "");
+      }
+      return (
+        '<a href="' + esc(fileHref(normalized)) + '" target="_blank" rel="noopener noreferrer">' +
+        esc(label || normalized) +
+        "</a>"
+      );
+    }
+
+    function parseUtcTimestamp(value) {
+      const raw = String(value ?? "").trim();
+      const match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(raw);
+      if (!match) {
+        return null;
+      }
+      return new Date(
+        Date.UTC(
+          Number(match[1]),
+          Number(match[2]) - 1,
+          Number(match[3]),
+          Number(match[4]),
+          Number(match[5]),
+          Number(match[6])
+        )
+      );
+    }
+
+    function formatLocalTimestamp(value) {
+      const date = parseUtcTimestamp(value);
+      if (!date) {
+        return String(value || "");
+      }
+      return date.toLocaleString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+        timeZoneName: "short"
+      });
+    }
+
+    function resolveKnownPath(candidate) {
+      let token = normalizePath(candidate);
+      if (!token) {
+        return "";
+      }
+      token = token.replace(/^[`'\"]+/, "").replace(/[`'\".,;:!?)+\]]+$/, "");
+      token = normalizePath(token);
+      if (!token) {
+        return "";
+      }
+      if (KNOWN_FILE_SET.has(token)) {
+        return token;
+      }
+      while (token.startsWith("../")) {
+        token = token.slice(3);
+      }
+      token = token.replace(/^\.\/+/, "");
+      if (KNOWN_FILE_SET.has(token)) {
+        return token;
+      }
+      if (token.includes("/")) {
+        const matches = KNOWN_FILES.filter(path => path === token || path.endsWith("/" + token));
+        if (matches.length === 1) {
+          return matches[0];
+        }
+      }
+      const basename = token.split("/").pop();
+      if (!basename) {
+        return "";
+      }
+      const basenameMatches = BASENAME_INDEX[basename] || [];
+      if (basenameMatches.length === 1) {
+        return basenameMatches[0];
+      }
+      return "";
+    }
+
+    function extractFileMentionsFromText(text) {
+      const raw = String(text ?? "");
+      const pattern = /([A-Za-z0-9_./\\-]+\.[A-Za-z0-9]{1,12})/g;
+      const found = new Set();
+      let match = null;
+      while ((match = pattern.exec(raw)) !== null) {
+        const resolved = resolveKnownPath(match[1]);
+        if (resolved) {
+          found.add(resolved);
+        }
+      }
+      return Array.from(found);
+    }
+
+    function linkifyProjectFiles(text) {
+      const raw = String(text ?? "");
+      const pattern = /([A-Za-z0-9_./\\-]+\.[A-Za-z0-9]{1,12})([),.;:!?]*)/g;
+      let html = "";
+      let cursor = 0;
+      let match = null;
+      while ((match = pattern.exec(raw)) !== null) {
+        html += esc(raw.slice(cursor, match.index));
+        const token = match[1];
+        const trailing = match[2] || "";
+        const resolved = resolveKnownPath(token);
+        if (resolved) {
+          html += fileLinkHtml(resolved, token);
+        } else {
+          html += esc(token);
+        }
+        html += esc(trailing);
+        cursor = pattern.lastIndex;
+      }
+      html += esc(raw.slice(cursor));
+      return html;
+    }
+
+    function extractPathsFromActivityEntry(entry) {
+      const paths = new Set();
+      const metadata = (entry && typeof entry.metadata === "object" && entry.metadata) ? entry.metadata : {};
+      if (typeof metadata.path === "string") {
+        const resolved = resolveKnownPath(metadata.path);
+        if (resolved) {
+          paths.add(resolved);
+        }
+      }
+      if (Array.isArray(metadata.paths)) {
+        metadata.paths.forEach(path => {
+          const resolved = resolveKnownPath(path);
+          if (resolved) {
+            paths.add(resolved);
+          }
+        });
+      }
+      extractFileMentionsFromText(entry.summary || "").forEach(path => paths.add(path));
+      return Array.from(paths);
+    }
+
+    function isOperationalPath(path) {
+      const normalized = normalizePath(path);
+      return (
+        !normalized ||
+        normalized === "backlog.md" ||
+        normalized.startsWith("project/state/") ||
+        normalized.startsWith("project/workspaces/")
+      );
+    }
+
+    function buildTaskDeliverablesMap(entries) {
+      const map = {};
+      entries.forEach(entry => {
+        const taskId = String(entry.task_id || "").trim();
+        if (!taskId) {
+          return;
+        }
+        const eventType = String(entry.event_type || "").toLowerCase();
+        const isFileEvent =
+          eventType.startsWith("file_") ||
+          eventType === "notes_update" ||
+          eventType.endsWith("_written");
+        if (!isFileEvent) {
+          return;
+        }
+        const deliverables = extractPathsFromActivityEntry(entry).filter(path => !isOperationalPath(path));
+        if (!deliverables.length) {
+          return;
+        }
+        if (!map[taskId]) {
+          map[taskId] = [];
+        }
+        const merged = new Set(map[taskId]);
+        deliverables.forEach(path => merged.add(path));
+        map[taskId] = Array.from(merged).sort();
+      });
+      return map;
+    }
+
+    const TASK_DELIVERABLES = buildTaskDeliverablesMap(DATA.activity_log || []);
+
+    function taskDeliverables(taskId) {
+      return TASK_DELIVERABLES[String(taskId || "").trim()] || [];
+    }
+
+    function taskColumnText(task, column) {
+      if (column === "deliverables") {
+        return taskDeliverables(task.task_id).join(", ");
+      }
+      const value = task[column];
+      return Array.isArray(value) ? value.join(", ") : String(value ?? "");
+    }
+
+    function renderDeliverablesCell(task) {
+      const files = taskDeliverables(task.task_id);
+      if (!files.length) {
+        return '<span class="empty">None</span>';
+      }
+      if (files.length <= DELIVERABLE_COLLAPSE_THRESHOLD) {
+        return '<div class="task-deliverables">' + files.map(path => fileLinkHtml(path)).join(", ") + "</div>";
+      }
+      const preview = files.slice(0, DELIVERABLE_PREVIEW_COUNT);
+      const hiddenCount = files.length - preview.length;
+      const previewHtml =
+        '<div class="task-deliverables">' +
+        preview.map(path => fileLinkHtml(path)).join(", ") +
+        ' <span class="muted-text">+' + hiddenCount + " more</span></div>";
+      const fullHtml =
+        '<details><summary>Show all ' + files.length + ' files</summary>' +
+        '<div class="task-deliverables-list">' + files.map(path => fileLinkHtml(path)).join(", ") + "</div>" +
+        "</details>";
+      return previewHtml + fullHtml;
+    }
+
+    function eventSeverity(entry) {
+      const status = String(entry.status || "").toLowerCase();
+      const eventType = String(entry.event_type || "").toLowerCase();
+      const summary = String(entry.summary || "").toLowerCase();
+      const summaryHasErrorKeyword = /\berror\b|\bfailed\b|\bexception\b/.test(summary);
+      if (
+        status.includes("error") ||
+        status.includes("fail") ||
+        status.includes("halt") ||
+        eventType.includes("unexpected_halt") ||
+        summaryHasErrorKeyword
+      ) {
+        return "error";
+      }
+      if (status.includes("warning") || eventType.includes("unexpected")) {
+        return "warning";
+      }
+      return "normal";
     }
 
     function tabButton(tab) {
@@ -411,6 +766,7 @@
       button.textContent = tab.label;
       button.onclick = () => {
         activeTab = tab.id;
+        safeStorageSet(STORAGE_KEYS.activeTab, activeTab);
         renderTabs();
       };
       return button;
@@ -424,13 +780,17 @@
         const panel = document.getElementById("tab-" + tab.id);
         panel.classList.toggle("active", activeTab === tab.id);
       });
+      safeStorageSet(STORAGE_KEYS.activeTab, activeTab);
     }
 
     function renderHeader() {
       const meta = document.getElementById("header-meta");
       const halted = DATA.project.state.halted ? "Yes" : "No";
-      const generated = DATA.generated_at_utc || "n/a";
-      meta.innerHTML = "Generated: <strong>" + esc(generated) + "</strong><br>Halted: <strong>" + esc(halted) + "</strong>";
+      const generatedUtc = DATA.generated_at_utc || "n/a";
+      const generatedLocal = generatedUtc === "n/a" ? "n/a" : formatLocalTimestamp(generatedUtc);
+      meta.innerHTML =
+        "Generated (Local): <strong>" + esc(generatedLocal) + "</strong><br>" +
+        "Halted: <strong>" + esc(halted) + "</strong>";
     }
 
     function kvRow(label, value) {
@@ -514,7 +874,7 @@
       const active = docs.find(doc => doc.id === activeDocId) || docs[0];
       view.innerHTML =
         "<h2>" + esc(active.title) + "</h2>" +
-        '<p class="doc-path">' + esc(active.path) + "</p>" +
+        '<p class="doc-path">' + fileLinkHtml(active.path, active.path) + "</p>" +
         active.html;
     }
 
@@ -523,18 +883,15 @@
       const filter = document.getElementById("task-status-filter").value;
       const allTasks = DATA.tasks || [];
       const filtered = allTasks.filter(task => {
-        const hay = TASK_COLUMNS.map(column => {
-          const value = task[column];
-          return Array.isArray(value) ? value.join(", ") : String(value ?? "");
-        }).join(" ").toLowerCase();
+        const hay = TASK_COLUMNS.map(column => taskColumnText(task, column)).join(" ").toLowerCase();
         const matchesSearch = !search || hay.includes(search);
         const matchesStatus = !filter || filter === "ALL" || task.status === filter;
         return matchesSearch && matchesStatus;
       });
 
       filtered.sort((left, right) => {
-        const leftRaw = Array.isArray(left[sortKey]) ? left[sortKey].join(", ") : String(left[sortKey] ?? "");
-        const rightRaw = Array.isArray(right[sortKey]) ? right[sortKey].join(", ") : String(right[sortKey] ?? "");
+        const leftRaw = taskColumnText(left, sortKey);
+        const rightRaw = taskColumnText(right, sortKey);
         const cmp = leftRaw.localeCompare(rightRaw, undefined, { sensitivity: "base", numeric: true });
         return sortDir === "asc" ? cmp : -cmp;
       });
@@ -559,13 +916,15 @@
 
       const body = document.getElementById("tasks-body");
       if (!filtered.length) {
-        body.innerHTML = '<tr><td colspan="7" class="empty">No tasks match current filters.</td></tr>';
+        body.innerHTML = '<tr><td colspan="' + TASK_COLUMNS.length + '" class="empty">No tasks match current filters.</td></tr>';
         return;
       }
       body.innerHTML = filtered.map(task => {
         return "<tr>" + TASK_COLUMNS.map(column => {
-          const value = task[column];
-          const rendered = Array.isArray(value) ? value.join(", ") : String(value ?? "");
+          if (column === "deliverables") {
+            return "<td>" + renderDeliverablesCell(task) + "</td>";
+          }
+          const rendered = taskColumnText(task, column);
           return "<td>" + esc(rendered) + "</td>";
         }).join("") + "</tr>";
       }).join("");
@@ -573,18 +932,29 @@
 
     function eventHtml(entry) {
       const role = entry.role_id || "unknown";
-      const color = roleColor(role);
+      const roleAccent = roleColor(role);
+      const severity = eventSeverity(entry);
+      const accent = severity === "error" ? "#ef4444" : (severity === "warning" ? "#f59e0b" : roleAccent);
       const status = entry.status ? " | " + entry.status : "";
       const task = entry.task_id ? " | Task " + entry.task_id : "";
       const summary = entry.summary || entry.event_type || "Activity event";
+      const metaText = (entry.event_type || "event") + task + status;
+      const runJournal = resolveKnownPath(entry.run_journal_path || "");
+      const runJournalHtml = runJournal
+        ? ' | Journal ' + fileLinkHtml(runJournal, runJournal)
+        : "";
+      const badge = severity === "error"
+        ? '<span class="event-badge error">Error</span>'
+        : (severity === "warning" ? '<span class="event-badge warning">Warning</span>' : "");
       return [
-        '<article class="event" style="border-left-color:' + color + '">',
+        '<article class="event ' + severity + '" style="border-left-color:' + accent + '">',
         '<div class="event-head">',
-        '<span class="event-role" style="background:' + color + '">' + esc(role) + "</span>",
-        '<span class="event-time">' + esc(entry.ts_utc || "") + "</span>",
+        '<span class="event-role" style="background:' + roleAccent + '">' + esc(role) + "</span>",
+        '<span class="event-time">' + esc(formatLocalTimestamp(entry.ts_utc || "")) + "</span>",
         "</div>",
-        '<p class="event-summary">' + esc(summary) + "</p>",
-        '<div class="event-meta">' + esc((entry.event_type || "event") + task + status) + "</div>",
+        badge,
+        '<p class="event-summary">' + linkifyProjectFiles(summary) + "</p>",
+        '<div class="event-meta">' + linkifyProjectFiles(metaText) + runJournalHtml + "</div>",
         "</article>"
       ].join("");
     }
@@ -652,6 +1022,10 @@
     }
 
     function boot() {
+      const persistedTab = safeStorageGet(STORAGE_KEYS.activeTab);
+      if (persistedTab && TAB_DEFS.some(tab => tab.id === persistedTab)) {
+        activeTab = persistedTab;
+      }
       renderTabs();
       renderHeader();
       renderProject();

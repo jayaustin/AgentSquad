@@ -16,16 +16,6 @@ class ValidationFailure(ValueError):
 
 DASHBOARD_AGENT_COLOR_DEFAULTS = {
     "operator": "#3B82F6",
-    "designer-acquisition": "#10B981",
-    "designer-engagement": "#F59E0B",
-    "art-director": "#F43F5E",
-    "technical-architect": "#06B6D4",
-    "development-engineer-python": "#8B5CF6",
-    "development-engineer-powershell": "#0EA5E9",
-    "qa-manager": "#84CC16",
-    "localization-engineer": "#F97316",
-    "product-manager": "#EC4899",
-    "data-analyst": "#14B8A6",
 }
 
 DASHBOARD_DEFAULTS = {
@@ -47,9 +37,12 @@ DASHBOARD_DEFAULTS = {
             "technical",
             "architecture",
             "spec",
-            "product",
             "qa",
             "localization",
+            "ux",
+            "audio",
+            "security",
+            "validation",
         ],
     },
     "agent_colors": DASHBOARD_AGENT_COLOR_DEFAULTS,

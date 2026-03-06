@@ -186,6 +186,19 @@ def _collect_documents(root: Path, dashboard_cfg: dict[str, Any]) -> list[dict[s
     return docs
 
 
+def _collect_known_files(root: Path) -> list[str]:
+    files: list[str] = []
+    for path in root.rglob("*"):
+        if not path.is_file():
+            continue
+        rel = path.relative_to(root).as_posix()
+        if rel.startswith(".git/"):
+            continue
+        files.append(rel)
+    files.sort()
+    return files
+
+
 def _backlog_status_counts(tasks: list[dict[str, Any]], statuses: list[str]) -> dict[str, int]:
     counts = {status: 0 for status in statuses}
     for task in tasks:
@@ -195,7 +208,7 @@ def _backlog_status_counts(tasks: list[dict[str, Any]], statuses: list[str]) -> 
     return counts
 
 
-def _build_payload(root: Path) -> dict[str, Any]:
+def _build_payload(root: Path, repo_root_relative_prefix: str, output_path: str) -> dict[str, Any]:
     config = validators.load_project_config(root)
     dashboard_cfg = validators.dashboard_config_with_defaults(config)
     roles_cfg = config.get("roles", {})
@@ -247,7 +260,10 @@ def _build_payload(root: Path) -> dict[str, Any]:
     host_info = config.get("host", {})
     execution_info = config.get("execution", {})
     payload = {
-        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        "repo_root_relative_prefix": repo_root_relative_prefix,
+        "dashboard_output_path": output_path,
+        "known_files": _collect_known_files(root),
         "project": {
             "id": project_info.get("id", ""),
             "name": project_info.get("name", ""),
@@ -285,7 +301,19 @@ def render_dashboard(root: Path) -> Path:
 
     template_path = root / "runner" / "templates" / "dashboard.html"
     template = template_path.read_text(encoding="utf-8")
-    payload = _build_payload(root)
+    try:
+        output_rel = output_file.relative_to(root).as_posix()
+    except ValueError:
+        output_rel = output_file.as_posix()
+
+    depth = len(PurePosixPath(output_rel).parent.parts)
+    repo_root_relative_prefix = "." if depth == 0 else "/".join([".."] * depth)
+
+    payload = _build_payload(
+        root=root,
+        repo_root_relative_prefix=repo_root_relative_prefix,
+        output_path=output_rel,
+    )
     rendered = template.replace(
         "{{DASHBOARD_PAYLOAD_JSON}}",
         json.dumps(payload, ensure_ascii=True).replace("</", "<\\/"),

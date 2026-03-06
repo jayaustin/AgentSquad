@@ -21,6 +21,22 @@ Define universal behavior for all roles in this framework.
     backlog tasks.
 11. Task ownership `owner: operator` is forbidden for all roles.
 
+## Logging Requirements
+
+1. Every backlog modification must be logged with task-level detail describing
+   what changed.
+2. Every file modification must produce a dedicated log line with the file path.
+3. Operator must log role dispatch (`role + task`) and role return
+   (`role + resulting status/summary`) for each execution turn.
+4. If a role needs human input, the role must write a local feedback artifact
+   file and log the artifact path.
+5. If a role needs to pass feedback/questions to another role, it must write a
+   local feedback artifact file and log the artifact path.
+6. Unexpected events must be logged explicitly as warnings/errors.
+7. Decision logs should capture meaningful decisions, assumptions, and tradeoff
+   choices made during task execution.
+8. All logged date-time values use `YYYY-MM-DD HH:MM:SS`.
+
 ## Project Initialization Gate
 
 Before any agent work can start, Operator must confirm:

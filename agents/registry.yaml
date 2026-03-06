@@ -8,28 +8,492 @@ roles:
   designer-engagement:
     display_name: Designer Engagement
     role_file: agents/roles/designer-engagement/agent-role.md
+  designer-ux:
+    display_name: Designer UX
+    role_file: agents/roles/designer-ux/agent-role.md
+  designer-ui:
+    display_name: Designer UI
+    role_file: agents/roles/designer-ui/agent-role.md
+  designer-gameplay:
+    display_name: Designer Gameplay
+    role_file: agents/roles/designer-gameplay/agent-role.md
+  designer-economy:
+    display_name: Designer Economy
+    role_file: agents/roles/designer-economy/agent-role.md
+  designer-monetization:
+    display_name: Designer Monetization
+    role_file: agents/roles/designer-monetization/agent-role.md
+  designer-liveops:
+    display_name: Designer LiveOps
+    role_file: agents/roles/designer-liveops/agent-role.md
+  designer-retention:
+    display_name: Designer Retention
+    role_file: agents/roles/designer-retention/agent-role.md
+  designer-onboarding:
+    display_name: Designer Onboarding
+    role_file: agents/roles/designer-onboarding/agent-role.md
+  designer-social:
+    display_name: Designer Social
+    role_file: agents/roles/designer-social/agent-role.md
+  designer-community:
+    display_name: Designer Community
+    role_file: agents/roles/designer-community/agent-role.md
+  designer-narrative:
+    display_name: Designer Narrative
+    role_file: agents/roles/designer-narrative/agent-role.md
+  designer-level:
+    display_name: Designer Level
+    role_file: agents/roles/designer-level/agent-role.md
+  designer-systems:
+    display_name: Designer Systems
+    role_file: agents/roles/designer-systems/agent-role.md
+  designer-combat:
+    display_name: Designer Combat
+    role_file: agents/roles/designer-combat/agent-role.md
+  designer-progression:
+    display_name: Designer Progression
+    role_file: agents/roles/designer-progression/agent-role.md
+  designer-accessibility:
+    display_name: Designer Accessibility
+    role_file: agents/roles/designer-accessibility/agent-role.md
+  designer-platform-web:
+    display_name: Designer Platform Web
+    role_file: agents/roles/designer-platform-web/agent-role.md
+  designer-platform-mobile:
+    display_name: Designer Platform Mobile
+    role_file: agents/roles/designer-platform-mobile/agent-role.md
+  designer-platform-console:
+    display_name: Designer Platform Console
+    role_file: agents/roles/designer-platform-console/agent-role.md
+  ux-researcher-discovery:
+    display_name: UX Researcher Discovery
+    role_file: agents/roles/ux-researcher-discovery/agent-role.md
+  ux-researcher-usability:
+    display_name: UX Researcher Usability
+    role_file: agents/roles/ux-researcher-usability/agent-role.md
+  ux-researcher-journey:
+    display_name: UX Researcher Journey
+    role_file: agents/roles/ux-researcher-journey/agent-role.md
+  design-systems-designer:
+    display_name: Design Systems Designer
+    role_file: agents/roles/design-systems-designer/agent-role.md
+  interaction-designer:
+    display_name: Interaction Designer
+    role_file: agents/roles/interaction-designer/agent-role.md
+  information-architect:
+    display_name: Information Architect
+    role_file: agents/roles/information-architect/agent-role.md
   art-director:
     display_name: Art Director
     role_file: agents/roles/art-director/agent-role.md
+  visual-designer:
+    display_name: Visual Designer
+    role_file: agents/roles/visual-designer/agent-role.md
+  concept-artist:
+    display_name: Concept Artist
+    role_file: agents/roles/concept-artist/agent-role.md
+  technical-artist:
+    display_name: Technical Artist
+    role_file: agents/roles/technical-artist/agent-role.md
+  sound-designer:
+    display_name: Sound Designer
+    role_file: agents/roles/sound-designer/agent-role.md
+  audio-director:
+    display_name: Audio Director
+    role_file: agents/roles/audio-director/agent-role.md
+  audio-implementation-designer:
+    display_name: Audio Implementation Designer
+    role_file: agents/roles/audio-implementation-designer/agent-role.md
+  composer:
+    display_name: Composer
+    role_file: agents/roles/composer/agent-role.md
+  voice-over-director:
+    display_name: Voice Over Director
+    role_file: agents/roles/voice-over-director/agent-role.md
+  localization-engineer:
+    display_name: Localization Engineer
+    role_file: agents/roles/localization-engineer/agent-role.md
+  localization-producer:
+    display_name: Localization Producer
+    role_file: agents/roles/localization-producer/agent-role.md
+  internationalization-engineer:
+    display_name: Internationalization Engineer
+    role_file: agents/roles/internationalization-engineer/agent-role.md
+  translation-quality-manager:
+    display_name: Translation Quality Manager
+    role_file: agents/roles/translation-quality-manager/agent-role.md
+  culturalization-specialist:
+    display_name: Culturalization Specialist
+    role_file: agents/roles/culturalization-specialist/agent-role.md
+  localization-qa-engineer:
+    display_name: Localization QA Engineer
+    role_file: agents/roles/localization-qa-engineer/agent-role.md
+  audio-localization-engineer:
+    display_name: Audio Localization Engineer
+    role_file: agents/roles/audio-localization-engineer/agent-role.md
+  product-spec-writer:
+    display_name: Product Spec Writer
+    role_file: agents/roles/product-spec-writer/agent-role.md
+  feature-spec-writer:
+    display_name: Feature Spec Writer
+    role_file: agents/roles/feature-spec-writer/agent-role.md
+  ux-spec-writer:
+    display_name: UX Spec Writer
+    role_file: agents/roles/ux-spec-writer/agent-role.md
+  gameplay-spec-writer:
+    display_name: Gameplay Spec Writer
+    role_file: agents/roles/gameplay-spec-writer/agent-role.md
+  economy-spec-writer:
+    display_name: Economy Spec Writer
+    role_file: agents/roles/economy-spec-writer/agent-role.md
+  monetization-spec-writer:
+    display_name: Monetization Spec Writer
+    role_file: agents/roles/monetization-spec-writer/agent-role.md
+  liveops-spec-writer:
+    display_name: LiveOps Spec Writer
+    role_file: agents/roles/liveops-spec-writer/agent-role.md
+  technical-spec-writer:
+    display_name: Technical Spec Writer
+    role_file: agents/roles/technical-spec-writer/agent-role.md
+  api-spec-writer:
+    display_name: API Spec Writer
+    role_file: agents/roles/api-spec-writer/agent-role.md
+  integration-spec-writer:
+    display_name: Integration Spec Writer
+    role_file: agents/roles/integration-spec-writer/agent-role.md
+  security-spec-writer:
+    display_name: Security Spec Writer
+    role_file: agents/roles/security-spec-writer/agent-role.md
+  test-spec-writer:
+    display_name: Test Spec Writer
+    role_file: agents/roles/test-spec-writer/agent-role.md
+  release-spec-writer:
+    display_name: Release Spec Writer
+    role_file: agents/roles/release-spec-writer/agent-role.md
+  nonfunctional-requirements-writer:
+    display_name: Nonfunctional Requirements Writer
+    role_file: agents/roles/nonfunctional-requirements-writer/agent-role.md
   technical-architect:
     display_name: Technical Architect
     role_file: agents/roles/technical-architect/agent-role.md
+  solution-architect-web:
+    display_name: Solution Architect Web
+    role_file: agents/roles/solution-architect-web/agent-role.md
+  solution-architect-mobile:
+    display_name: Solution Architect Mobile
+    role_file: agents/roles/solution-architect-mobile/agent-role.md
+  solution-architect-backend:
+    display_name: Solution Architect Backend
+    role_file: agents/roles/solution-architect-backend/agent-role.md
+  gameplay-architect:
+    display_name: Gameplay Architect
+    role_file: agents/roles/gameplay-architect/agent-role.md
+  economy-architect:
+    display_name: Economy Architect
+    role_file: agents/roles/economy-architect/agent-role.md
+  systems-architect:
+    display_name: Systems Architect
+    role_file: agents/roles/systems-architect/agent-role.md
+  data-architect:
+    display_name: Data Architect
+    role_file: agents/roles/data-architect/agent-role.md
+  security-architect:
+    display_name: Security Architect
+    role_file: agents/roles/security-architect/agent-role.md
+  platform-architect:
+    display_name: Platform Architect
+    role_file: agents/roles/platform-architect/agent-role.md
+  audio-systems-architect:
+    display_name: Audio Systems Architect
+    role_file: agents/roles/audio-systems-architect/agent-role.md
+  localization-architect:
+    display_name: Localization Architect
+    role_file: agents/roles/localization-architect/agent-role.md
+  qa-architecture-lead:
+    display_name: QA Architecture Lead
+    role_file: agents/roles/qa-architecture-lead/agent-role.md
+  test-architecture-lead:
+    display_name: Test Architecture Lead
+    role_file: agents/roles/test-architecture-lead/agent-role.md
   development-engineer-python:
     display_name: Development Engineer Python
     role_file: agents/roles/development-engineer-python/agent-role.md
   development-engineer-powershell:
-    display_name: Development Engineer PowerShell
+    display_name: Development Engineer Powershell
     role_file: agents/roles/development-engineer-powershell/agent-role.md
+  development-engineer-c:
+    display_name: Development Engineer C
+    role_file: agents/roles/development-engineer-c/agent-role.md
+  development-engineer-cpp:
+    display_name: Development Engineer C++
+    role_file: agents/roles/development-engineer-cpp/agent-role.md
+  development-engineer-csharp:
+    display_name: Development Engineer C#
+    role_file: agents/roles/development-engineer-csharp/agent-role.md
+  development-engineer-java:
+    display_name: Development Engineer Java
+    role_file: agents/roles/development-engineer-java/agent-role.md
+  development-engineer-kotlin:
+    display_name: Development Engineer Kotlin
+    role_file: agents/roles/development-engineer-kotlin/agent-role.md
+  development-engineer-swift:
+    display_name: Development Engineer Swift
+    role_file: agents/roles/development-engineer-swift/agent-role.md
+  development-engineer-javascript:
+    display_name: Development Engineer Javascript
+    role_file: agents/roles/development-engineer-javascript/agent-role.md
+  development-engineer-typescript:
+    display_name: Development Engineer Typescript
+    role_file: agents/roles/development-engineer-typescript/agent-role.md
+  development-engineer-go:
+    display_name: Development Engineer Go
+    role_file: agents/roles/development-engineer-go/agent-role.md
+  development-engineer-rust:
+    display_name: Development Engineer Rust
+    role_file: agents/roles/development-engineer-rust/agent-role.md
+  development-engineer-php:
+    display_name: Development Engineer Php
+    role_file: agents/roles/development-engineer-php/agent-role.md
+  development-engineer-ruby:
+    display_name: Development Engineer Ruby
+    role_file: agents/roles/development-engineer-ruby/agent-role.md
+  development-engineer-scala:
+    display_name: Development Engineer Scala
+    role_file: agents/roles/development-engineer-scala/agent-role.md
+  development-engineer-web:
+    display_name: Development Engineer Web
+    role_file: agents/roles/development-engineer-web/agent-role.md
+  development-engineer-frontend-react:
+    display_name: Development Engineer Frontend React
+    role_file: agents/roles/development-engineer-frontend-react/agent-role.md
+  development-engineer-frontend-vue:
+    display_name: Development Engineer Frontend Vue
+    role_file: agents/roles/development-engineer-frontend-vue/agent-role.md
+  development-engineer-frontend-angular:
+    display_name: Development Engineer Frontend Angular
+    role_file: agents/roles/development-engineer-frontend-angular/agent-role.md
+  development-engineer-backend-node:
+    display_name: Development Engineer Backend Node
+    role_file: agents/roles/development-engineer-backend-node/agent-role.md
+  development-engineer-backend-dotnet:
+    display_name: Development Engineer Backend .NET
+    role_file: agents/roles/development-engineer-backend-dotnet/agent-role.md
+  development-engineer-backend-spring:
+    display_name: Development Engineer Backend Spring
+    role_file: agents/roles/development-engineer-backend-spring/agent-role.md
+  development-engineer-backend-django:
+    display_name: Development Engineer Backend Django
+    role_file: agents/roles/development-engineer-backend-django/agent-role.md
+  development-engineer-backend-fastapi:
+    display_name: Development Engineer Backend Fastapi
+    role_file: agents/roles/development-engineer-backend-fastapi/agent-role.md
+  development-engineer-mobile-ios:
+    display_name: Development Engineer Mobile iOS
+    role_file: agents/roles/development-engineer-mobile-ios/agent-role.md
+  development-engineer-mobile-android:
+    display_name: Development Engineer Mobile Android
+    role_file: agents/roles/development-engineer-mobile-android/agent-role.md
+  development-engineer-api:
+    display_name: Development Engineer API
+    role_file: agents/roles/development-engineer-api/agent-role.md
+  development-engineer-database-sql:
+    display_name: Development Engineer Database SQL
+    role_file: agents/roles/development-engineer-database-sql/agent-role.md
+  development-engineer-database-nosql:
+    display_name: Development Engineer Database NoSQL
+    role_file: agents/roles/development-engineer-database-nosql/agent-role.md
+  development-engineer-data-pipeline:
+    display_name: Development Engineer Data Pipeline
+    role_file: agents/roles/development-engineer-data-pipeline/agent-role.md
+  development-engineer-integration:
+    display_name: Development Engineer Integration
+    role_file: agents/roles/development-engineer-integration/agent-role.md
+  development-engineer-devops:
+    display_name: Development Engineer DevOps
+    role_file: agents/roles/development-engineer-devops/agent-role.md
+  development-engineer-ci-cd:
+    display_name: Development Engineer CI/CD
+    role_file: agents/roles/development-engineer-ci-cd/agent-role.md
+  development-engineer-observability:
+    display_name: Development Engineer Observability
+    role_file: agents/roles/development-engineer-observability/agent-role.md
+  development-engineer-performance:
+    display_name: Development Engineer Performance
+    role_file: agents/roles/development-engineer-performance/agent-role.md
+  development-engineer-unity:
+    display_name: Development Engineer Unity
+    role_file: agents/roles/development-engineer-unity/agent-role.md
+  development-engineer-unreal:
+    display_name: Development Engineer Unreal
+    role_file: agents/roles/development-engineer-unreal/agent-role.md
+  development-engineer-godot:
+    display_name: Development Engineer Godot
+    role_file: agents/roles/development-engineer-godot/agent-role.md
+  development-engineer-audio:
+    display_name: Development Engineer Audio
+    role_file: agents/roles/development-engineer-audio/agent-role.md
+  development-engineer-localization:
+    display_name: Development Engineer Localization
+    role_file: agents/roles/development-engineer-localization/agent-role.md
+  development-engineer-security:
+    display_name: Development Engineer Security
+    role_file: agents/roles/development-engineer-security/agent-role.md
+  development-engineer-python-gameplay:
+    display_name: Development Engineer Python Gameplay
+    role_file: agents/roles/development-engineer-python-gameplay/agent-role.md
+  development-engineer-web-acquisition:
+    display_name: Development Engineer Web Acquisition
+    role_file: agents/roles/development-engineer-web-acquisition/agent-role.md
+  development-engineer-typescript-engagement:
+    display_name: Development Engineer Typescript Engagement
+    role_file: agents/roles/development-engineer-typescript-engagement/agent-role.md
+  development-engineer-cpp-engine:
+    display_name: Development Engineer C++ Engine
+    role_file: agents/roles/development-engineer-cpp-engine/agent-role.md
   qa-manager:
     display_name: QA Manager
     role_file: agents/roles/qa-manager/agent-role.md
-  localization-engineer:
-    display_name: Localization Engineer
-    role_file: agents/roles/localization-engineer/agent-role.md
-  product-manager:
-    display_name: Product Manager
-    role_file: agents/roles/product-manager/agent-role.md
-  data-analyst:
-    display_name: Data Analyst
-    role_file: agents/roles/data-analyst/agent-role.md
-
+  qa-functional:
+    display_name: QA Functional
+    role_file: agents/roles/qa-functional/agent-role.md
+  qa-regression:
+    display_name: QA Regression
+    role_file: agents/roles/qa-regression/agent-role.md
+  qa-integration:
+    display_name: QA Integration
+    role_file: agents/roles/qa-integration/agent-role.md
+  qa-system:
+    display_name: QA System
+    role_file: agents/roles/qa-system/agent-role.md
+  qa-end-to-end:
+    display_name: QA End-to-End
+    role_file: agents/roles/qa-end-to-end/agent-role.md
+  qa-automation:
+    display_name: QA Automation
+    role_file: agents/roles/qa-automation/agent-role.md
+  qa-performance:
+    display_name: QA Performance
+    role_file: agents/roles/qa-performance/agent-role.md
+  qa-load:
+    display_name: QA Load
+    role_file: agents/roles/qa-load/agent-role.md
+  qa-scalability:
+    display_name: QA Scalability
+    role_file: agents/roles/qa-scalability/agent-role.md
+  qa-reliability:
+    display_name: QA Reliability
+    role_file: agents/roles/qa-reliability/agent-role.md
+  qa-usability:
+    display_name: QA Usability
+    role_file: agents/roles/qa-usability/agent-role.md
+  qa-accessibility:
+    display_name: QA Accessibility
+    role_file: agents/roles/qa-accessibility/agent-role.md
+  qa-compatibility-web:
+    display_name: QA Compatibility Web
+    role_file: agents/roles/qa-compatibility-web/agent-role.md
+  qa-compatibility-mobile:
+    display_name: QA Compatibility Mobile
+    role_file: agents/roles/qa-compatibility-mobile/agent-role.md
+  qa-gameplay:
+    display_name: QA Gameplay
+    role_file: agents/roles/qa-gameplay/agent-role.md
+  qa-economy-balance:
+    display_name: QA Economy Balance
+    role_file: agents/roles/qa-economy-balance/agent-role.md
+  qa-monetization:
+    display_name: QA Monetization
+    role_file: agents/roles/qa-monetization/agent-role.md
+  qa-liveops:
+    display_name: QA LiveOps
+    role_file: agents/roles/qa-liveops/agent-role.md
+  qa-localization:
+    display_name: QA Localization
+    role_file: agents/roles/qa-localization/agent-role.md
+  qa-audio:
+    display_name: QA Audio
+    role_file: agents/roles/qa-audio/agent-role.md
+  qa-api:
+    display_name: QA API
+    role_file: agents/roles/qa-api/agent-role.md
+  qa-data-quality:
+    display_name: QA Data Quality
+    role_file: agents/roles/qa-data-quality/agent-role.md
+  qa-security:
+    display_name: QA Security
+    role_file: agents/roles/qa-security/agent-role.md
+  qa-penetration:
+    display_name: QA Penetration
+    role_file: agents/roles/qa-penetration/agent-role.md
+  qa-compliance:
+    display_name: QA Compliance
+    role_file: agents/roles/qa-compliance/agent-role.md
+  qa-release-readiness:
+    display_name: QA Release Readiness
+    role_file: agents/roles/qa-release-readiness/agent-role.md
+  qa-smoke:
+    display_name: QA Smoke
+    role_file: agents/roles/qa-smoke/agent-role.md
+  qa-exploratory:
+    display_name: QA Exploratory
+    role_file: agents/roles/qa-exploratory/agent-role.md
+  qa-uat-coordinator:
+    display_name: QA UAT Coordinator
+    role_file: agents/roles/qa-uat-coordinator/agent-role.md
+  security-engineer-application:
+    display_name: Security Engineer Application
+    role_file: agents/roles/security-engineer-application/agent-role.md
+  security-engineer-cloud:
+    display_name: Security Engineer Cloud
+    role_file: agents/roles/security-engineer-cloud/agent-role.md
+  security-engineer-infrastructure:
+    display_name: Security Engineer Infrastructure
+    role_file: agents/roles/security-engineer-infrastructure/agent-role.md
+  security-engineer-identity:
+    display_name: Security Engineer Identity
+    role_file: agents/roles/security-engineer-identity/agent-role.md
+  security-engineer-devsecops:
+    display_name: Security Engineer DevSecOps
+    role_file: agents/roles/security-engineer-devsecops/agent-role.md
+  security-analyst-threat-modeling:
+    display_name: Security Analyst Threat Modeling
+    role_file: agents/roles/security-analyst-threat-modeling/agent-role.md
+  security-analyst-vulnerability:
+    display_name: Security Analyst Vulnerability
+    role_file: agents/roles/security-analyst-vulnerability/agent-role.md
+  security-code-reviewer:
+    display_name: Security Code Reviewer
+    role_file: agents/roles/security-code-reviewer/agent-role.md
+  security-architecture-reviewer:
+    display_name: Security Architecture Reviewer
+    role_file: agents/roles/security-architecture-reviewer/agent-role.md
+  security-incident-responder:
+    display_name: Security Incident Responder
+    role_file: agents/roles/security-incident-responder/agent-role.md
+  security-penetration-tester:
+    display_name: Security Penetration Tester
+    role_file: agents/roles/security-penetration-tester/agent-role.md
+  security-compliance-engineer:
+    display_name: Security Compliance Engineer
+    role_file: agents/roles/security-compliance-engineer/agent-role.md
+  security-privacy-engineer:
+    display_name: Security Privacy Engineer
+    role_file: agents/roles/security-privacy-engineer/agent-role.md
+  security-cryptography-engineer:
+    display_name: Security Cryptography Engineer
+    role_file: agents/roles/security-cryptography-engineer/agent-role.md
+  security-secrets-management-engineer:
+    display_name: Security Secrets Management Engineer
+    role_file: agents/roles/security-secrets-management-engineer/agent-role.md
+  security-detection-engineer:
+    display_name: Security Detection Engineer
+    role_file: agents/roles/security-detection-engineer/agent-role.md
+  security-red-team:
+    display_name: Security Red Team
+    role_file: agents/roles/security-red-team/agent-role.md
+  security-blue-team:
+    display_name: Security Blue Team
+    role_file: agents/roles/security-blue-team/agent-role.md
+  security-release-gatekeeper:
+    display_name: Security Release Gatekeeper
+    role_file: agents/roles/security-release-gatekeeper/agent-role.md

@@ -6,6 +6,10 @@ Important constraints:
 
 - Do not assign or reassign any task owner to `operator`.
 - Any new tasks in `new_tasks` must be owned by non-operator roles.
+- Add `decision_log` with meaningful implementation/validation decisions.
+- Add `unexpected_events` when you hit anomalies, uncertainty, or blockers.
+- If you need human input, include `human_feedback`.
+- If you need to pass guidance/questions to another role, include `role_feedback`.
 
 ## Task
 

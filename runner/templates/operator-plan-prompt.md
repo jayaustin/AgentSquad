@@ -12,6 +12,10 @@ Return ONLY valid JSON following the `operator_plan` contract.
 - Use backlog statuses from config only.
 - NEVER assign any task owner to `operator`.
 - NEVER include `operator` in `initial_role_sequence`.
+- Add `decision_log` with concise, meaningful planning decisions (no filler).
+- Add `unexpected_events` only when something unusual happened.
+- If you need human clarification, include `human_feedback` with
+  `summary`, `questions`, and `requires_response=true`.
 - Do not include markdown fences.
 
 ## Human Request

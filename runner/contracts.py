@@ -39,6 +39,94 @@ def _normalize_dependencies(value: Any) -> list[str]:
     raise ContractError("dependencies must be a list or comma-separated string.")
 
 
+def _normalize_string_list(value: Any, field_name: str) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return [str(item).strip() for item in value if str(item).strip()]
+    if isinstance(value, str):
+        text = value.strip()
+        return [text] if text else []
+    raise ContractError(f"{field_name} must be a list of strings or a string.")
+
+
+def _normalize_human_feedback(value: Any) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if isinstance(value, str):
+        summary = value.strip()
+        if not summary:
+            return None
+        return {
+            "summary": summary,
+            "questions": [],
+            "requires_response": True,
+        }
+    if not isinstance(value, dict):
+        raise ContractError("human_feedback must be an object or string.")
+
+    summary = _parse_scalar_string(value.get("summary", value.get("message", "")))
+    questions = _normalize_string_list(value.get("questions", []), "human_feedback.questions")
+    requires_response_raw = value.get("requires_response")
+    if requires_response_raw is None:
+        requires_response = bool(summary or questions)
+    elif isinstance(requires_response_raw, bool):
+        requires_response = requires_response_raw
+    else:
+        raise ContractError("human_feedback.requires_response must be boolean.")
+
+    if not summary and not questions and not requires_response:
+        return None
+
+    return {
+        "summary": summary,
+        "questions": questions,
+        "requires_response": requires_response,
+    }
+
+
+def _normalize_role_feedback(
+    value: Any,
+    known_roles: set[str],
+) -> list[dict[str, Any]]:
+    if value is None:
+        return []
+    if isinstance(value, dict):
+        items = [value]
+    elif isinstance(value, list):
+        items = value
+    else:
+        raise ContractError("role_feedback must be an object or list of objects.")
+
+    normalized: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, dict):
+            raise ContractError("role_feedback entries must be objects.")
+        target_role = _parse_scalar_string(item.get("target_role", ""))
+        summary = _parse_scalar_string(item.get("summary", item.get("message", "")))
+        questions = _normalize_string_list(item.get("questions", []), "role_feedback.questions")
+        requested_action = _parse_scalar_string(item.get("requested_action", ""))
+        related_task_ids = _normalize_dependencies(item.get("related_task_ids", []))
+        if not target_role:
+            raise ContractError("role_feedback.target_role cannot be empty.")
+        if target_role not in known_roles:
+            raise ContractError(f"role_feedback target role '{target_role}' is unknown.")
+        if not summary and not questions:
+            raise ContractError(
+                "role_feedback entry must include a summary/message or at least one question."
+            )
+        normalized.append(
+            {
+                "target_role": target_role,
+                "summary": summary,
+                "questions": questions,
+                "requested_action": requested_action,
+                "related_task_ids": related_task_ids,
+            }
+        )
+    return normalized
+
+
 def _extract_json_text(raw_text: str) -> str:
     stripped = (raw_text or "").strip()
     if not stripped:
@@ -124,12 +212,21 @@ def validate_operator_plan(
             "initial_role_sequence may not include 'operator'. "
             "Operator orchestrates but does not execute backlog tasks."
         )
+    decision_log = _normalize_string_list(payload.get("decision_log", []), "decision_log")
+    unexpected_events = _normalize_string_list(
+        payload.get("unexpected_events", []),
+        "unexpected_events",
+    )
+    human_feedback = _normalize_human_feedback(payload.get("human_feedback"))
 
     return {
         "type": "operator_plan",
         "summary": _parse_scalar_string(payload.get("summary", "")),
         "tasks": normalized_tasks,
         "initial_role_sequence": normalized_sequence,
+        "decision_log": decision_log,
+        "unexpected_events": unexpected_events,
+        "human_feedback": human_feedback,
     }
 
 
@@ -190,6 +287,13 @@ def validate_agent_result(
             "reason": reason,
             "requested_task_ids": requested_task_ids,
         }
+    decision_log = _normalize_string_list(payload.get("decision_log", []), "decision_log")
+    unexpected_events = _normalize_string_list(
+        payload.get("unexpected_events", []),
+        "unexpected_events",
+    )
+    human_feedback = _normalize_human_feedback(payload.get("human_feedback"))
+    role_feedback = _normalize_role_feedback(payload.get("role_feedback", []), known_roles)
 
     return {
         "type": "agent_result",
@@ -200,4 +304,8 @@ def validate_agent_result(
         "new_tasks": new_tasks,
         "handoff_request": normalized_handoff,
         "notes_update": _parse_scalar_string(payload.get("notes_update", "")),
+        "decision_log": decision_log,
+        "unexpected_events": unexpected_events,
+        "human_feedback": human_feedback,
+        "role_feedback": role_feedback,
     }

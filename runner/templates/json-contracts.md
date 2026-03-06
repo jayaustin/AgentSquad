@@ -3,6 +3,18 @@
 ```json
 {
   "summary": "Short planning summary",
+  "decision_log": [
+    "Chose discovery-first sequencing due unknown localization constraints."
+  ],
+  "unexpected_events": [],
+  "human_feedback": {
+    "summary": "Need clarification on launch markets before final sequencing.",
+    "questions": [
+      "Which locales are mandatory for v1?",
+      "Is launch date fixed or flexible by 2 weeks?"
+    ],
+    "requires_response": true
+  },
   "tasks": [
     {
       "task_id": "T-001",
@@ -27,6 +39,8 @@
 - `owner` must be a valid non-operator role ID.
 - `owner: "operator"` is forbidden.
 - `initial_role_sequence` must not include `operator`.
+- `human_feedback` is optional and should be present when Operator needs user input.
+- `decision_log` entries should be concise and actionable.
 
 # agent_result
 
@@ -46,7 +60,33 @@
       "T-001"
     ]
   },
-  "notes_update": "Optional note text."
+  "notes_update": "Optional note text.",
+  "decision_log": [
+    "Kept parser pure and moved side effects to orchestrator boundary."
+  ],
+  "unexpected_events": [
+    "Input sample contained malformed CSV row 184."
+  ],
+  "human_feedback": {
+    "summary": "Need user preference for default locale fallback order.",
+    "questions": [
+      "Should fallback be en-US then en, or en then project default?"
+    ],
+    "requires_response": true
+  },
+  "role_feedback": [
+    {
+      "target_role": "technical-architect",
+      "summary": "Need decision on cache invalidation strategy before final refactor.",
+      "questions": [
+        "Is write-through cache mandatory for this subsystem?"
+      ],
+      "requested_action": "Provide architectural direction for cache policy.",
+      "related_task_ids": [
+        "T-001"
+      ]
+    }
+  ]
 }
 ```
 
@@ -54,3 +94,6 @@
 
 - `updates.owner` may not be `operator`.
 - Any task in `new_tasks` may not use `owner: "operator"`.
+- `human_feedback` and `role_feedback` are optional but should be used when
+  communication is required.
+- `role_feedback.target_role` must be a known role ID.

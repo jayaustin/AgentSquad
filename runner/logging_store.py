@@ -7,9 +7,20 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+FILE_TS_FORMAT = "%Y-%m-%d_%H-%M-%S"
+
 
 def _safe_segment(value: str) -> str:
     return "".join(ch if ch.isalnum() or ch in {"-", "_"} else "-" for ch in value).strip("-")
+
+
+def timestamp_now() -> str:
+    return datetime.now(timezone.utc).strftime(DATETIME_FORMAT)
+
+
+def filename_timestamp_now() -> str:
+    return datetime.now(timezone.utc).strftime(FILE_TS_FORMAT)
 
 
 def ensure_workspace(root: Path, role_id: str) -> Path:
@@ -32,6 +43,31 @@ def _append_jsonl(path: Path, payload: dict[str, Any]) -> None:
         handle.write(json.dumps(payload, ensure_ascii=True) + "\n")
 
 
+def write_activity_event(
+    root: Path,
+    role_id: str,
+    task_id: str,
+    event_type: str,
+    summary: str,
+    status: str = "",
+    run_journal_path: str = "",
+    metadata: dict[str, Any] | None = None,
+) -> None:
+    workspace = ensure_workspace(root, role_id)
+    payload = {
+        "ts_utc": timestamp_now(),
+        "role_id": role_id,
+        "task_id": task_id,
+        "event_type": event_type,
+        "summary": str(summary).strip(),
+        "run_journal_path": str(run_journal_path or "").strip(),
+        "status": str(status or "").strip(),
+        "metadata": metadata or {},
+    }
+    _append_jsonl(root / "project" / "state" / "activity-log.jsonl", payload)
+    _append_jsonl(workspace / "activity.jsonl", payload)
+
+
 def write_run_journal(
     root: Path,
     role_id: str,
@@ -50,9 +86,10 @@ def write_run_journal(
 ) -> Path:
     workspace = ensure_workspace(root, role_id)
     runs_dir = workspace / "runs"
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    timestamp = timestamp_now()
+    filename_stamp = filename_timestamp_now()
     safe_task = _safe_segment(task_id or "no-task")
-    path = runs_dir / f"{timestamp}-{safe_task}.md"
+    path = runs_dir / f"{filename_stamp}-{safe_task}.md"
 
     event_lines = events or []
     lines: list[str] = []
@@ -111,16 +148,14 @@ def write_run_journal(
     }
     if metadata:
         base_metadata.update(metadata)
-    payload = {
-        "ts_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "role_id": role_id,
-        "task_id": task_id,
-        "event_type": event_type,
-        "summary": event_summary,
-        "run_journal_path": run_path,
-        "status": event_status,
-        "metadata": base_metadata,
-    }
-    _append_jsonl(root / "project" / "state" / "activity-log.jsonl", payload)
-    _append_jsonl(workspace / "activity.jsonl", payload)
+    write_activity_event(
+        root=root,
+        role_id=role_id,
+        task_id=task_id,
+        event_type=event_type,
+        summary=event_summary,
+        run_journal_path=run_path,
+        status=event_status,
+        metadata=base_metadata,
+    )
     return path
