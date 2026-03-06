@@ -1,67 +1,60 @@
 # AgentSquad v1
 
 AgentSquad is a non-API orchestration framework for IDE-based agent workflows.
-It separates global framework assets from project-specific state, and runs a
-sequential, operator-mediated execution loop.
 
-## Start a New Project
+## 1. Overview
+
+AgentSquad puts you in the role of a CEO or Executive Producer managing a team
+of expert agents. You define what should be built, and `Operator` (your project
+manager) decomposes that intent into right-sized backlog work, coordinates role
+handoffs, and keeps execution moving in dependency-safe order.
+
+Key ideas and value:
+
+- Global framework assets live under `steering/`, `agents/`, and `superpowers/`.
+- Project-specific state and outputs live under `project/`.
+- `Operator` is the only role that interfaces directly with the human request.
+- `Operator` acts as planner/orchestrator and does not own or execute backlog tasks.
+- Roles run sequentially with strict context load order:
+  `steering -> role -> project -> role-override`.
+- Backlog (`backlog.md`) is the source of truth for work ownership/status.
+- Contracts are machine-validated JSON (`operator_plan`, `agent_result`) with retry-then-halt behavior.
+- Persisted project truth is file-based (`.md`, `.yaml`, `.jsonl`) and surfaced through dashboard snapshots.
+
+Execution model clarity:
+
+- Agent turns are real adapter CLI invocations, not fake/simulated role labels.
+- In the current setup, non-operator role threads can read/write project files
+  if the host tool grants those permissions.
+- The orchestrator still performs canonical writes for core framework artifacts
+  such as backlog/state/log/dashboard updates.
+
+## 2. Start A New Project
 
 To use this framework for a new project:
 
 1. Clone this repository into a new project directory.
-2. Open the cloned folder in your IDE agent environment (for example Codex, Roo, or Kiro).
-3. Start a fresh IDE agent thread and use this short prompt:
+2. Confirm your IDE assistant is supported by a functional adapter in
+   [`runner/adapters/`](runner/adapters/) (look for a real implementation, not a stub).
+3. Open the cloned folder in your IDE agent environment.
+4. Start a fresh IDE agent thread and use this short prompt:
 
 ```text
 Read AGENTS.md and initialize this thread as AgentSquad Operator
 ```
 
-4. The IDE agent should run all required bootstrap CLI commands automatically:
+5. The IDE agent should run required bootstrap commands automatically:
    - generate `project/state/operator-bootstrap.md`
-   - load and follow the generated bootstrap packet
-5. Answer the Operator's initialization questions and let it update:
+   - load and follow that packet
+6. Answer Operator initialization intake so it can update:
    - `project/context/project-context.md`
    - `project/config/project.yaml`
-   - If the gate is blocked, Operator should provide a copy/paste intake template
-     with all required fields, definitions, and examples.
-6. Only after initialization is complete, provide your first project request.
+7. After initialization reaches `READY`, provide your first project request.
 
-Note: users should not need to run command-line steps to initialize Operator.
-Initialization should be fully handled by the IDE agent thread.
+Note: in an ideal environment, users should not manually run bootstrap CLI
+steps. Initialization should be handled by the IDE agent thread.
 
-During orchestration, AgentSquad auto-generates a browser dashboard snapshot at:
-
-- `project/state/dashboard.html`
-
-Open that file directly in any browser (`file://`) to inspect project state.
-
-## Core Ideas
-
-- Global framework assets live under `steering/`, `agents/`, and `superpowers/`.
-- Project-specific assets live under `project/`.
-- `Operator` is the only role that interfaces directly with the human request and
-  acts as project manager for decomposition, sequencing, and orchestration.
-- `Operator` never owns or executes backlog tasks; all backlog tasks must be
-  assigned to non-operator specialist roles.
-- Roles execute sequentially with strict context load order:
-  `steering -> role -> project -> role-override`.
-- Backlog is the source of truth for work ownership and status.
-
-## CLI
-
-Run commands from repository root:
-
-```bash
-python -m runner.orchestrator init
-python -m runner.orchestrator bootstrap-operator --print-packet
-python -m runner.orchestrator validate
-python -m runner.orchestrator render-dashboard
-python -m runner.orchestrator run --request "your request"
-python -m runner.orchestrator step
-python -m runner.orchestrator resume
-```
-
-## Dashboard
+## 3. Dashboard
 
 AgentSquad renders a no-server, dark-mode dashboard snapshot after operator and
 step execution events. The dashboard includes:
@@ -82,32 +75,59 @@ Structured activity events are written to:
 
 Markdown run journals remain in `project/workspaces/<role-id>/runs/`.
 
-## Host Adapter
+Dashboard snapshot path:
 
-This framework is API-free. It invokes a local assistant command configured in
-`project/config/project.yaml` at:
+- `project/state/dashboard.html`
 
-- `host.primary_adapter` (for example `codex`, `claude-code`, `antigravity`, `cursor`)
-- `host.adapter_command` (shell command that reads prompt input and writes JSON)
+Open directly in browser via `file://`.
 
-Currently implemented:
+## 4. CLI
 
-- `codex`
+Run commands from repository root:
 
-Registered stubs (not yet implemented):
+```bash
+python -m runner.orchestrator init
+python -m runner.orchestrator bootstrap-operator --print-packet
+python -m runner.orchestrator validate
+python -m runner.orchestrator render-dashboard
+python -m runner.orchestrator run --request "your request"
+python -m runner.orchestrator step
+python -m runner.orchestrator resume
+```
 
-- `roo`, `kiro`, `claude-code`, `antigravity`, `cursor`, `github-copilot`,
-  `continue`, `cline`, `windsurf`, `gemini-code-assist`
+These commands are intentionally available for manual control/troubleshooting.
+In an ideal setup, most invocation is performed by Operator and role agents, not
+the human.
+
+## 5. Host Adapter
+
+This framework was built and tested using OpenAI Codex CLI as the host adapter.
+It can theoretically work with other providers if they support similar
+local-CLI invocation semantics and session behavior.
+
+Configuration:
+
+- `host.primary_adapter` (adapter ID)
+- `host.adapter_command` (local command executable)
+
+Current adapter support status:
+
+- Functional implementation: `codex`
+- Registered stubs (not implemented): `roo`, `kiro`, `claude-code`,
+  `antigravity`, `cursor`, `github-copilot`, `continue`, `cline`, `windsurf`,
+  `gemini-code-assist`
+
+If you use a non-Codex provider, you must implement and test its adapter first.
 
 The runner passes prompt data through:
 
 - `STDIN`
 - `AGENTSQUAD_PROMPT` environment variable
 
-## Threaded Role Sessions
+## 6. Threaded Role Sessions
 
-AgentSquad supports persistent per-role Codex threads so Operator does not need
-to repeatedly rebuild role context every turn.
+AgentSquad supports persistent per-role threads so context is not rebuilt from
+scratch every turn.
 
 Configure in `project/config/project.yaml`:
 
@@ -116,14 +136,44 @@ Configure in `project/config/project.yaml`:
 - `host.context_rot_guardrails.max_session_age_minutes`
 - `host.context_rot_guardrails.force_reload_on_context_change`
 
-When `per-role-threads` is enabled, the runner tracks role session IDs in
-`project/state/orchestrator-state.yaml` and automatically refreshes sessions
-when guardrails trigger (turn count, age, or context hash change).
+How it works:
 
-## Validation Guarantees
+1. Orchestrator selects the next role/task.
+2. Adapter invokes that role thread via local CLI.
+3. JSON contract is validated.
+4. Orchestrator persists canonical state updates.
+5. Dashboard/logs are refreshed.
 
-- Role files exist for every enabled role.
-- Role frontmatter includes required contract keys.
-- Referenced superpower IDs are valid.
-- Backlog header matches the required schema.
-- Project config matches required keys and fixed execution policies.
+File access behavior:
+
+- Non-operator role threads can read/write project files in this setup (subject
+  to host tool permissions/sandbox).
+- Operator is not the only writer.
+- Orchestrator still owns critical framework writes and validation pathways for
+  backlog/state/log/dashboard consistency.
+
+## 7. Validation Guarantees
+
+Validation and runtime guardrails are designed to keep orchestration safe,
+deterministic, and auditable.
+
+Framework/config integrity checks include:
+
+- required scaffold files exist
+- role files exist for enabled roles
+- role frontmatter contract keys are present
+- referenced superpower IDs are valid
+- backlog header schema is exact
+- execution policy keys are constrained (`sequential`, `operator-mediated`, `dependency-fifo`)
+- dashboard config shape is validated
+
+Runtime contract and execution safeguards include:
+
+- strict context load order enforcement
+- one retry for invalid JSON, then halt with reason
+- initialization gate must pass before work execution
+- task ownership forbids `owner: operator`
+- `operator_plan` must actually modify `backlog.md` or is rejected
+- operator-mediated reassignment for invalid/disabled ownership conditions
+- journaling/state persistence on each step
+- best-effort dashboard refresh after key events and halt paths
