@@ -1,18 +1,38 @@
 """Host adapters for non-API assistant invocation."""
 
+from .antigravity import AntiGravityAdapter
 from .base import AdapterError, BaseAdapter
+from .claude_code import ClaudeCodeAdapter
+from .cline import ClineAdapter
 from .codex import CodexAdapter
+from .continue_dev import ContinueAdapter
+from .cursor import CursorAdapter
+from .gemini_code_assist import GeminiCodeAssistAdapter
+from .github_copilot import GitHubCopilotAdapter
 from .kiro import KiroAdapter
 from .roo import RooAdapter
+from .windsurf import WindsurfAdapter
+
+
+ADAPTER_TYPES = {
+    "antigravity": AntiGravityAdapter,
+    "claude-code": ClaudeCodeAdapter,
+    "cline": ClineAdapter,
+    "codex": CodexAdapter,
+    "continue": ContinueAdapter,
+    "cursor": CursorAdapter,
+    "gemini-code-assist": GeminiCodeAssistAdapter,
+    "github-copilot": GitHubCopilotAdapter,
+    "kiro": KiroAdapter,
+    "roo": RooAdapter,
+    "windsurf": WindsurfAdapter,
+}
 
 
 def build_adapter(name: str) -> BaseAdapter:
     lowered = (name or "").strip().lower()
-    if lowered == "codex":
-        return CodexAdapter()
-    if lowered == "roo":
-        return RooAdapter()
-    if lowered == "kiro":
-        return KiroAdapter()
-    raise AdapterError(f"Unsupported adapter '{name}'.")
-
+    adapter_type = ADAPTER_TYPES.get(lowered)
+    if adapter_type is None:
+        supported = ", ".join(sorted(ADAPTER_TYPES.keys()))
+        raise AdapterError(f"Unsupported adapter '{name}'. Supported adapters: {supported}.")
+    return adapter_type()

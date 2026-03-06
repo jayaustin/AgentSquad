@@ -39,7 +39,10 @@ Open that file directly in any browser (`file://`) to inspect project state.
 
 - Global framework assets live under `steering/`, `agents/`, and `superpowers/`.
 - Project-specific assets live under `project/`.
-- `Operator` is the only role that interfaces directly with the human request.
+- `Operator` is the only role that interfaces directly with the human request and
+  acts as project manager for decomposition, sequencing, and orchestration.
+- `Operator` never owns or executes backlog tasks; all backlog tasks must be
+  assigned to non-operator specialist roles.
 - Roles execute sequentially with strict context load order:
   `steering -> role -> project -> role-override`.
 - Backlog is the source of truth for work ownership and status.
@@ -84,8 +87,17 @@ Markdown run journals remain in `project/workspaces/<role-id>/runs/`.
 This framework is API-free. It invokes a local assistant command configured in
 `project/config/project.yaml` at:
 
-- `host.primary_adapter` (`codex`, `roo`, `kiro`)
+- `host.primary_adapter` (for example `codex`, `claude-code`, `antigravity`, `cursor`)
 - `host.adapter_command` (shell command that reads prompt input and writes JSON)
+
+Currently implemented:
+
+- `codex`
+
+Registered stubs (not yet implemented):
+
+- `roo`, `kiro`, `claude-code`, `antigravity`, `cursor`, `github-copilot`,
+  `continue`, `cline`, `windsurf`, `gemini-code-assist`
 
 The runner passes prompt data through:
 

@@ -527,6 +527,20 @@ def validate_framework(root: Path) -> list[str]:
         expected = backlog_store.BACKLOG_HEADER
         if not first_line or first_line[0].strip() != expected:
             errors.append("backlog.md header does not match required schema.")
+        else:
+            try:
+                backlog_tasks = backlog_store.read_backlog(backlog_path)
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"backlog.md could not be parsed: {exc}")
+                backlog_tasks = []
+            for task in backlog_tasks:
+                owner = str(task.get("owner", "")).strip()
+                task_id = str(task.get("task_id", "")).strip() or "<unknown-task-id>"
+                if owner == "operator":
+                    errors.append(
+                        "backlog.md contains forbidden owner 'operator' "
+                        f"for task '{task_id}'. Reassign to a non-operator role."
+                    )
     else:
         errors.append("Missing backlog.md.")
 

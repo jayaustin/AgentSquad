@@ -1017,6 +1017,10 @@ def _apply_agent_result(
         raise OrchestrationHalt(f"Invalid status after updates: '{target['status']}'.")
     if target["owner"] not in known_roles:
         raise OrchestrationHalt(f"Invalid owner after updates: '{target['owner']}'.")
+    if target["owner"] == "operator":
+        raise OrchestrationHalt(
+            "Invalid owner after updates: 'operator' is forbidden for backlog task ownership."
+        )
 
     if result.get("new_tasks"):
         tasks = backlog_store.upsert_tasks(tasks, result["new_tasks"])
@@ -1046,6 +1050,27 @@ def _handle_disabled_owner_if_needed(
     return False
 
 
+def _handle_operator_owner_if_needed(
+    root: Path,
+    runtime: dict[str, Any],
+    state: dict[str, Any],
+    tasks: list[dict[str, Any]],
+) -> bool:
+    """Ensure no active backlog task is owned by Operator."""
+    for task in tasks:
+        if task["status"] not in {"Todo", "In Progress"}:
+            continue
+        if task["owner"] != "operator":
+            continue
+        request = (
+            f"Task '{task['task_id']}' is owned by forbidden role 'operator'. "
+            "Reassign this task to a non-operator role and update dependencies/sequence as needed."
+        )
+        _invoke_operator(root, runtime, state, request, "operator-owner-mediation")
+        return True
+    return False
+
+
 def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any]) -> bool:
     backlog_path = root / "backlog.md"
     tasks = backlog_store.read_backlog(backlog_path)
@@ -1054,13 +1079,17 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
     if backlog_store.all_done(tasks):
         return False
 
+    if _handle_operator_owner_if_needed(root, runtime, state, tasks):
+        save_state(root, state)
+        return True
+
     if _handle_disabled_owner_if_needed(root, runtime, state, tasks):
         save_state(root, state)
         return True
 
     next_task = backlog_store.select_next_task(
         tasks=tasks,
-        enabled_roles=runtime["enabled_roles"],
+        enabled_roles=set(runtime["enabled_roles"]) - {"operator"},
         role_priority=state.get("role_sequence", []),
     )
     if next_task is None:
@@ -1073,6 +1102,10 @@ def execute_one_step(root: Path, runtime: dict[str, Any], state: dict[str, Any])
 
     task_id = next_task["task_id"]
     owner = next_task["owner"]
+    if owner == "operator":
+        raise OrchestrationHalt(
+            f"Task '{task_id}' cannot be executed: owner 'operator' is forbidden for backlog tasks."
+        )
     if owner not in runtime["enabled_roles"]:
         raise OrchestrationHalt(
             f"Task '{task_id}' owner '{owner}' is not enabled and could not be mediated."

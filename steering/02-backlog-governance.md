@@ -6,7 +6,7 @@
 
 ## Rules
 
-1. `Owner` is a single role ID from the role registry.
+1. `Owner` is a single non-operator role ID from the role registry.
 2. `Status` must be one of: `Todo`, `In Progress`, `Blocked`, `In Validation`, `Done`.
 3. `Dependencies` is a comma-separated list of task IDs or empty.
 4. Operator and non-operator roles can create and update tasks via machine-validated contracts.
@@ -16,6 +16,7 @@
    plan completion.
 8. Returning task JSON in chat/console without updating `backlog.md` is invalid.
 9. After backlog changes, refresh dashboard snapshot so `Tasks` view stays in sync.
+10. Any attempt to set `owner: operator` (by Operator or non-Operator roles) is invalid.
 
 ## Initialization and Backlog
 
@@ -32,3 +33,11 @@ For every accepted `operator_plan`:
 3. Record the update in run journal/workspace logs.
 4. Regenerate `project/state/dashboard.html`.
 5. Return a completion message that references updated files.
+
+## Sequencing Authority
+
+1. Operator is responsible for dependency-safe sequencing of backlog tasks.
+2. Operator may request specialist-role feedback on sequencing when dependency
+   order or milestone grouping is uncertain.
+3. Sequencing decisions must be reflected in backlog dependencies and role order
+   before non-operator execution continues.

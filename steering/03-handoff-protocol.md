@@ -14,6 +14,12 @@ Operator-mediated only.
 6. Operator refreshes dashboard snapshot.
 7. Runner resumes sequential execution from updated backlog state.
 
+## Sequencing Consultation
+
+Operator may initiate a handoff-like consultation to gather role feedback on
+task ordering/dependency strategy. Consultation outputs must still be mediated
+by Operator, then persisted to backlog sequencing metadata before execution resumes.
+
 ## Halt Conditions
 
 1. Handoff request references unknown role.

@@ -17,6 +17,9 @@ Define universal behavior for all roles in this framework.
    until written to the required `.md` files.
 9. After critical file updates, regenerate `project/state/dashboard.html` so the
    browser view reflects current project truth.
+10. Operator acts as project manager/orchestrator and never executes specialist
+    backlog tasks.
+11. Task ownership `owner: operator` is forbidden for all roles.
 
 ## Project Initialization Gate
 
@@ -37,4 +40,5 @@ For Operator turns that produce plans, tasks, or governance decisions:
 1. Update canonical files first (for example `backlog.md` and context/spec docs).
 2. Confirm those writes succeeded.
 3. Regenerate dashboard snapshot (`py -3 -m runner.orchestrator render-dashboard`).
-4. Only then report completion to the user.
+4. Only then report completion to the user with a summary and reference
+   `project/state/dashboard.html`.

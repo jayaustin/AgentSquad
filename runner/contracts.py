@@ -88,6 +88,11 @@ def _validate_task(task: Any, allowed_statuses: set[str], known_roles: set[str])
         raise ContractError("task_id cannot be empty.")
     if normalized["owner"] not in known_roles:
         raise ContractError(f"Unknown task owner '{normalized['owner']}'.")
+    if normalized["owner"] == "operator":
+        raise ContractError(
+            "Task owner 'operator' is forbidden. "
+            "Operator is a project-management/orchestration role and may not own backlog tasks."
+        )
     if normalized["status"] not in allowed_statuses:
         raise ContractError(
             f"Invalid task status '{normalized['status']}'. "
@@ -114,6 +119,11 @@ def validate_operator_plan(
     unknown_roles = [role for role in normalized_sequence if role not in known_roles]
     if unknown_roles:
         raise ContractError(f"initial_role_sequence contains unknown roles: {unknown_roles}")
+    if "operator" in normalized_sequence:
+        raise ContractError(
+            "initial_role_sequence may not include 'operator'. "
+            "Operator orchestrates but does not execute backlog tasks."
+        )
 
     return {
         "type": "operator_plan",
@@ -144,6 +154,15 @@ def validate_agent_result(
         updates = {}
     if not isinstance(updates, dict):
         raise ContractError("agent_result updates must be an object.")
+    if "owner" in updates:
+        proposed_owner = _parse_scalar_string(updates.get("owner"))
+        if proposed_owner and proposed_owner not in known_roles:
+            raise ContractError(f"agent_result updates.owner '{proposed_owner}' is unknown.")
+        if proposed_owner == "operator":
+            raise ContractError(
+                "agent_result updates.owner may not be 'operator'. "
+                "Operator cannot own backlog tasks."
+            )
 
     new_tasks_raw = payload.get("new_tasks", [])
     if new_tasks_raw is None:
@@ -182,4 +201,3 @@ def validate_agent_result(
         "handoff_request": normalized_handoff,
         "notes_update": _parse_scalar_string(payload.get("notes_update", "")),
     }
-

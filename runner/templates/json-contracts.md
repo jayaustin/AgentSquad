@@ -22,6 +22,12 @@
 }
 ```
 
+`owner` rules:
+
+- `owner` must be a valid non-operator role ID.
+- `owner: "operator"` is forbidden.
+- `initial_role_sequence` must not include `operator`.
+
 # agent_result
 
 ```json
@@ -44,3 +50,7 @@
 }
 ```
 
+`agent_result` ownership rules:
+
+- `updates.owner` may not be `operator`.
+- Any task in `new_tasks` may not use `owner: "operator"`.
