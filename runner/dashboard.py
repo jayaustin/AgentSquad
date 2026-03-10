@@ -25,6 +25,17 @@ DEFAULT_FALLBACK_COLORS = [
 ]
 
 
+def _format_utc_timestamp(timestamp: float | int | None) -> str:
+    if timestamp is None:
+        return ""
+    try:
+        return datetime.fromtimestamp(float(timestamp), tz=timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+    except (TypeError, ValueError, OSError, OverflowError):
+        return ""
+
+
 def _strip_frontmatter(markdown_text: str) -> str:
     match = re.match(r"^---\n.*?\n---\n?", markdown_text, flags=re.DOTALL)
     if match:
@@ -170,6 +181,15 @@ def _collect_documents(root: Path, dashboard_cfg: dict[str, Any]) -> list[dict[s
                 title = first_heading.group(1).strip()
             lower_path = rel.lower()
             primary = any(keyword in lower_path for keyword in primary_keywords)
+            try:
+                stat = md_path.stat()
+                created_ts = getattr(stat, "st_birthtime", None)
+                if created_ts is None:
+                    created_ts = stat.st_ctime
+                modified_ts = stat.st_mtime
+            except OSError:
+                created_ts = None
+                modified_ts = None
 
             docs.append(
                 {
@@ -177,6 +197,8 @@ def _collect_documents(root: Path, dashboard_cfg: dict[str, Any]) -> list[dict[s
                     "path": rel,
                     "title": title,
                     "is_primary": primary,
+                    "created_at_utc": _format_utc_timestamp(created_ts),
+                    "modified_at_utc": _format_utc_timestamp(modified_ts),
                     "html": _markdown_to_html(text),
                 }
             )

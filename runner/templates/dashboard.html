@@ -353,13 +353,49 @@
       display: grid;
       grid-template-columns: 280px 1fr;
       gap: 0;
-      min-height: 560px;
+      min-height: 0;
+      align-items: start;
     }
     .left-list {
       border-right: 1px solid var(--border);
       background: rgba(17, 24, 39, 0.7);
-      overflow: auto;
-      max-height: 80vh;
+      overflow: visible;
+      max-height: none;
+    }
+    .doc-list-controls {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      background: #111827;
+      display: grid;
+      gap: 6px;
+    }
+    .doc-list-controls label {
+      color: #cbd5e1;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .doc-list-controls select {
+      width: 100%;
+      background: #0f172a;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 7px;
+      font-size: 0.84rem;
+    }
+    .doc-item-title {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .doc-item-meta {
+      display: block;
+      font-size: 0.77rem;
+      color: var(--muted);
+      line-height: 1.35;
     }
     .left-item {
       width: 100%;
@@ -377,8 +413,8 @@
     }
     .right-view {
       padding: 12px;
-      overflow: auto;
-      max-height: 80vh;
+      overflow: visible;
+      max-height: none;
     }
     .doc-path {
       margin: 0 0 10px 0;
@@ -658,7 +694,7 @@
       .left-list {
         border-right: 0;
         border-bottom: 1px solid var(--border);
-        max-height: 220px;
+        max-height: none;
       }
       .agent-tabs {
         border-right: 0;
@@ -829,6 +865,8 @@
 
     let activeTab = "project";
     let activeDocId = null;
+    let docSortKey = "name";
+    let docSortDir = "asc";
     let activeAgentId = null;
     let sortKey = "task_id";
     let sortDir = "asc";
@@ -2022,6 +2060,43 @@
       wireProjectSettingsValidation();
     }
 
+    function docTimestampText(value) {
+      const raw = String(value || "").trim();
+      if (!raw) {
+        return "n/a";
+      }
+      return formatLocalTimestamp(raw);
+    }
+
+    function compareDocuments(left, right) {
+      const leftTitle = String(left.title || left.path || "");
+      const rightTitle = String(right.title || right.path || "");
+      let cmp = 0;
+
+      if (docSortKey === "created" || docSortKey === "modified") {
+        const field = docSortKey === "created" ? "created_at_utc" : "modified_at_utc";
+        const leftRaw = String(left[field] || "").trim();
+        const rightRaw = String(right[field] || "").trim();
+        if (!leftRaw && rightRaw) {
+          cmp = 1;
+        } else if (leftRaw && !rightRaw) {
+          cmp = -1;
+        } else {
+          cmp = leftRaw.localeCompare(rightRaw, undefined, { sensitivity: "base", numeric: true });
+        }
+      } else {
+        cmp = leftTitle.localeCompare(rightTitle, undefined, { sensitivity: "base", numeric: true });
+      }
+
+      if (cmp === 0) {
+        cmp = String(left.path || "").localeCompare(String(right.path || ""), undefined, {
+          sensitivity: "base",
+          numeric: true
+        });
+      }
+      return docSortDir === "desc" ? -cmp : cmp;
+    }
+
     function renderDocuments() {
       const docs = DATA.documents || [];
       const list = document.getElementById("documents-list");
@@ -2032,14 +2107,51 @@
         view.innerHTML = '<p class="empty">No included markdown documents matched dashboard filters.</p>';
         return;
       }
-      if (!activeDocId || !docs.some(doc => doc.id === activeDocId)) {
-        activeDocId = docs[0].id;
+
+      const sortedDocs = docs.slice().sort(compareDocuments);
+      if (!activeDocId || !sortedDocs.some(doc => doc.id === activeDocId)) {
+        activeDocId = sortedDocs[0].id;
       }
-      docs.forEach(doc => {
+
+      const controls = document.createElement("div");
+      controls.className = "doc-list-controls";
+      controls.innerHTML = [
+        '<label for="doc-sort-key">Sort By</label>',
+        '<select id="doc-sort-key">',
+        '<option value="name"' + (docSortKey === "name" ? " selected" : "") + ">Document Name</option>",
+        '<option value="created"' + (docSortKey === "created" ? " selected" : "") + ">Creation Date</option>",
+        '<option value="modified"' + (docSortKey === "modified" ? " selected" : "") + ">Last Modified Date</option>",
+        "</select>",
+        '<select id="doc-sort-dir">',
+        '<option value="asc"' + (docSortDir === "asc" ? " selected" : "") + ">Ascending</option>",
+        '<option value="desc"' + (docSortDir === "desc" ? " selected" : "") + ">Descending</option>",
+        "</select>"
+      ].join("");
+      list.appendChild(controls);
+      const keySelect = controls.querySelector("#doc-sort-key");
+      const dirSelect = controls.querySelector("#doc-sort-dir");
+      if (keySelect) {
+        keySelect.addEventListener("change", () => {
+          docSortKey = keySelect.value;
+          renderDocuments();
+        });
+      }
+      if (dirSelect) {
+        dirSelect.addEventListener("change", () => {
+          docSortDir = dirSelect.value;
+          renderDocuments();
+        });
+      }
+
+      sortedDocs.forEach(doc => {
         const button = document.createElement("button");
         const primaryPrefix = doc.is_primary ? "Primary: " : "";
         button.className = "left-item" + (doc.id === activeDocId ? " active" : "");
-        button.textContent = primaryPrefix + doc.title;
+        button.innerHTML = [
+          '<span class="doc-item-title">' + esc(primaryPrefix + doc.title) + "</span>",
+          '<span class="doc-item-meta">Created: ' + esc(docTimestampText(doc.created_at_utc)) + "</span>",
+          '<span class="doc-item-meta">Last Modified: ' + esc(docTimestampText(doc.modified_at_utc)) + "</span>"
+        ].join("");
         button.onclick = () => {
           activeDocId = doc.id;
           renderDocuments();
@@ -2047,10 +2159,15 @@
         list.appendChild(button);
       });
 
-      const active = docs.find(doc => doc.id === activeDocId) || docs[0];
+      const active = sortedDocs.find(doc => doc.id === activeDocId) || sortedDocs[0];
+      const createdText = docTimestampText(active.created_at_utc);
+      const modifiedText = docTimestampText(active.modified_at_utc);
       view.innerHTML =
         "<h2>" + esc(active.title) + "</h2>" +
-        '<p class="doc-path">' + fileLinkHtml(active.path, active.path) + "</p>" +
+        '<p class="doc-path">' +
+          fileLinkHtml(active.path, active.path) +
+          "<br>Created: <strong>" + esc(createdText) + "</strong> | Last Modified: <strong>" + esc(modifiedText) + "</strong>" +
+        "</p>" +
         active.html;
     }
 
