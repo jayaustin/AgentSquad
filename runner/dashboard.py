@@ -320,7 +320,7 @@ def _build_payload(root: Path, repo_root_relative_prefix: str, output_path: str)
             "name": project_info.get("name", ""),
             "primary_adapter": host_info.get("primary_adapter", ""),
             "adapter_command": host_info.get("adapter_command", ""),
-            "session_mode": host_info.get("session_mode", "per-role-threads"),
+            "session_mode": host_info.get("session_mode", "stateless"),
             "execution_mode": execution_info.get("mode", ""),
             "handoff_authority": execution_info.get("handoff_authority", ""),
             "selection_policy": execution_info.get("selection_policy", ""),
@@ -341,8 +341,8 @@ def _build_payload(root: Path, repo_root_relative_prefix: str, output_path: str)
             "host": {
                 "primary_adapter": str(host_info.get("primary_adapter", "")).strip(),
                 "adapter_command": str(host_info.get("adapter_command", "")).strip(),
-                "session_mode": str(host_info.get("session_mode", "per-role-threads")).strip()
-                or "per-role-threads",
+                "session_mode": str(host_info.get("session_mode", "stateless")).strip()
+                or "stateless",
                 "context_rot_guardrails": {
                     "max_turns_per_role_session": int(
                         guardrails.get("max_turns_per_role_session", 8)

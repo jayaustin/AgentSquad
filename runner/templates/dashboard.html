@@ -1595,7 +1595,7 @@
       return {
         "host.primary_adapter": String(host.primary_adapter || "").trim(),
         "host.adapter_command": String(host.adapter_command || "").trim(),
-        "host.session_mode": String(host.session_mode || "per-role-threads").trim() || "per-role-threads",
+        "host.session_mode": String(host.session_mode || "stateless").trim() || "stateless",
         "host.context_rot_guardrails.max_turns_per_role_session": Number.isInteger(maxTurns) ? maxTurns : 8,
         "host.context_rot_guardrails.max_session_age_minutes": Number.isInteger(maxAge) ? maxAge : 240,
         "host.context_rot_guardrails.force_reload_on_context_change": (

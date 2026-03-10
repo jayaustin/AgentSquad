@@ -387,8 +387,8 @@ def _project_config_seed(role_definitions: dict[str, dict[str, Any]]) -> dict[st
         "project": {"id": "sample-project", "name": "Sample Project"},
         "host": {
             "primary_adapter": "codex",
-            "adapter_command": "codex",
-            "session_mode": "per-role-threads",
+            "adapter_command": "codex --sandbox workspace-write --ask-for-approval never --ephemeral",
+            "session_mode": "stateless",
             "context_rot_guardrails": {
                 "max_turns_per_role_session": 8,
                 "max_session_age_minutes": 240,
@@ -966,7 +966,7 @@ def _resolve_role_session_plan(
     role_id: str,
     context_hash: str,
 ) -> dict[str, Any]:
-    mode = runtime.get("session_mode", "per-role-threads")
+    mode = runtime.get("session_mode", "stateless")
     if role_id == "operator":
         reasons = ["operator-forced-full-context-reload"]
         if mode != "per-role-threads":
@@ -1156,7 +1156,7 @@ def _runtime(root: Path) -> dict[str, Any]:
     statuses = list(config["backlog"]["statuses"])
     adapter_name = str(config["host"]["primary_adapter"])
     adapter_command = str(config["host"]["adapter_command"])
-    session_mode = str(config["host"].get("session_mode", "per-role-threads"))
+    session_mode = str(config["host"].get("session_mode", "stateless"))
     context_rot_guardrails = config["host"].get("context_rot_guardrails", {})
     unexpected_event_policy = str(
         config.get("execution", {}).get("unexpected_event_policy", DEFAULT_UNEXPECTED_EVENT_POLICY)

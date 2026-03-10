@@ -453,7 +453,7 @@ def _validate_project_config(config: dict[str, Any]) -> list[str]:
             "['errors-only', 'errors-or-warnings', 'proceed']."
         )
 
-    session_mode = host.get("session_mode", "per-role-threads")
+    session_mode = host.get("session_mode", "stateless")
     if session_mode not in {"per-role-threads", "stateless"}:
         errors.append("host.session_mode must be 'per-role-threads' or 'stateless'.")
 
