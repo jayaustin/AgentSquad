@@ -125,6 +125,230 @@
       padding: 3px 9px;
       font-size: 0.82rem;
     }
+    .project-agents {
+      margin-top: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .project-agents h3 {
+      margin: 0 0 8px 0;
+      color: #dbeafe;
+      font-size: 1rem;
+    }
+    .operator-entry {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-left: 6px solid #3b82f6;
+      border-radius: 8px;
+      background: #0f172a;
+    }
+    .discipline-groups {
+      display: grid;
+      gap: 8px;
+    }
+    .discipline-group {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #0f172a;
+      overflow: hidden;
+    }
+    .discipline-group > summary {
+      cursor: pointer;
+      padding: 8px 10px;
+      color: #dbeafe;
+      font-weight: 600;
+      user-select: none;
+    }
+    .discipline-group[open] > summary {
+      border-bottom: 1px solid var(--border);
+    }
+    .discipline-agent-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+    .discipline-agent-list li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1f2a44;
+    }
+    .discipline-agent-list li:last-child {
+      border-bottom: 0;
+    }
+    .discipline-group-actions {
+      display: flex;
+      gap: 6px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #1f2a44;
+      background: rgba(2, 6, 23, 0.45);
+    }
+    .discipline-action-btn {
+      border: 1px solid var(--border);
+      background: #17233a;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      cursor: pointer;
+    }
+    .discipline-action-btn:hover {
+      background: #1d2d49;
+    }
+    .agent-name {
+      font-weight: 600;
+    }
+    .agent-role-id {
+      color: var(--muted);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.82rem;
+    }
+    .agent-state {
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+    .agent-state-toggle {
+      cursor: pointer;
+      background: transparent;
+    }
+    .agent-state-toggle:focus-visible {
+      outline: 2px solid #93c5fd;
+      outline-offset: 1px;
+    }
+    .agent-state.enabled {
+      background: rgba(16, 185, 129, 0.18);
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+    }
+    .agent-state.disabled {
+      background: rgba(148, 163, 184, 0.2);
+      border-color: rgba(148, 163, 184, 0.45);
+      color: #cbd5e1;
+    }
+    .project-settings {
+      margin-top: 12px;
+      background: var(--panel-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+    }
+    .project-settings h3 {
+      margin: 0 0 8px 0;
+      color: #dbeafe;
+      font-size: 1rem;
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 10px;
+    }
+    .settings-field {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      display: grid;
+      gap: 5px;
+    }
+    .settings-field label {
+      font-size: 0.86rem;
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+    .settings-field input,
+    .settings-field select {
+      background: #0b1220;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 7px 8px;
+      width: 100%;
+      font-family: inherit;
+    }
+    .settings-hint {
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+    .settings-validation {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      background: #0f172a;
+      font-size: 0.86rem;
+    }
+    .settings-validation.ok {
+      border-color: rgba(16, 185, 129, 0.45);
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.08);
+    }
+    .settings-validation.error {
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fecaca;
+      background: rgba(239, 68, 68, 0.08);
+    }
+    .settings-errors {
+      margin: 0;
+      padding-left: 18px;
+    }
+    .settings-prompt {
+      margin-top: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: #0f172a;
+    }
+    .settings-prompt h4 {
+      margin: 0 0 6px 0;
+      color: #dbeafe;
+      font-size: 0.95rem;
+    }
+    .settings-prompt textarea {
+      width: 100%;
+      min-height: 160px;
+      margin-top: 8px;
+      resize: vertical;
+      background: #0b1220;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.83rem;
+      line-height: 1.4;
+    }
+    .settings-prompt-actions {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .settings-copy-btn {
+      border: 1px solid var(--border);
+      background: #17233a;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    .settings-copy-status {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
     .split {
       display: grid;
       grid-template-columns: 280px 1fr;
@@ -286,7 +510,8 @@
     .agent-layout {
       display: grid;
       grid-template-columns: 260px 1fr;
-      min-height: 560px;
+      min-height: 0;
+      align-items: start;
     }
     .agent-tabs {
       border-right: 1px solid var(--border);
@@ -295,6 +520,54 @@
       display: flex;
       flex-direction: column;
       gap: 6px;
+      overflow: visible;
+      height: auto;
+      max-height: none;
+    }
+    .agent-tab-group {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.55);
+      overflow: hidden;
+    }
+    .agent-tab-group-title {
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: #bfdbfe;
+      background: rgba(2, 6, 23, 0.55);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    .agent-tab-group-title::-webkit-details-marker {
+      display: none;
+    }
+    .agent-tab-group-title::after {
+      content: "▸";
+      float: right;
+      color: #93c5fd;
+    }
+    .agent-tab-group[open] .agent-tab-group-title {
+      border-bottom: 1px solid var(--border);
+    }
+    .agent-tab-group[open] .agent-tab-group-title::after {
+      content: "▾";
+    }
+    .agent-tab-group-body {
+      display: flex;
+      flex-direction: column;
+    }
+    .agent-tab-group-body .agent-tab {
+      border: 0;
+      border-radius: 0;
+      border-bottom: 1px solid #202c46;
+      background: transparent;
+    }
+    .agent-tab-group-body .agent-tab:last-child {
+      border-bottom: 0;
     }
     .agent-tab {
       border: 1px solid var(--border);
@@ -304,15 +577,41 @@
       text-align: left;
       padding: 8px 10px;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
     .agent-tab.active {
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.15);
       font-weight: 600;
     }
+    .agent-tab-label {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .agent-status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      flex: 0 0 auto;
+      border: 1px solid transparent;
+    }
+    .agent-status-dot.enabled {
+      background: #10b981;
+      border-color: rgba(110, 231, 183, 0.6);
+    }
+    .agent-status-dot.disabled {
+      background: #64748b;
+      border-color: rgba(203, 213, 225, 0.55);
+    }
     .agent-panel {
       padding: 12px;
-      overflow: auto;
-      max-height: 80vh;
+      overflow: visible;
+      height: auto;
+      max-height: none;
     }
     .agent-header {
       border: 1px solid var(--border);
@@ -354,12 +653,20 @@
       .split,
       .agent-layout {
         grid-template-columns: 1fr;
+        min-height: 0;
       }
-      .left-list,
-      .agent-tabs {
+      .left-list {
         border-right: 0;
         border-bottom: 1px solid var(--border);
         max-height: 220px;
+      }
+      .agent-tabs {
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+        max-height: none;
+      }
+      .agent-panel {
+        max-height: none;
       }
     }
   </style>
@@ -423,7 +730,8 @@
       { id: "agents", label: "Agents" }
     ];
     const STORAGE_KEYS = {
-      activeTab: "agentsquad.dashboard.activeTopTab"
+      activeTab: "agentsquad.dashboard.activeTopTab",
+      openAgentGroups: "agentsquad.dashboard.openAgentGroups"
     };
     const TASK_COLUMNS = [
       "task_id",
@@ -448,6 +756,76 @@
     const DELIVERABLE_COLLAPSE_THRESHOLD = 14;
     const DELIVERABLE_PREVIEW_COUNT = 8;
     const REPO_ROOT_PREFIX = String(DATA.repo_root_relative_prefix || ".").replaceAll("\\", "/");
+    const SETTINGS_OPTIONS = {
+      hostPrimaryAdapter: [
+        "antigravity",
+        "claude-code",
+        "cline",
+        "codex",
+        "continue",
+        "cursor",
+        "gemini-code-assist",
+        "github-copilot",
+        "kiro",
+        "roo",
+        "windsurf"
+      ],
+      hostSessionMode: ["per-role-threads", "stateless"],
+      boolValues: ["true", "false"],
+      executionMode: ["sequential"],
+      executionHandoffAuthority: ["operator-mediated"],
+      executionSelectionPolicy: ["dependency-fifo"],
+      executionUnexpectedEventPolicy: ["errors-only", "errors-or-warnings", "proceed"],
+      dashboardRefreshPolicy: ["after-every-step"],
+      dashboardFailureMode: ["non-blocking-log"]
+    };
+    const SETTINGS_FIELD_SPECS = [
+      { id: "setting-host-primary-adapter", key: "host.primary_adapter", label: "Primary Adapter" },
+      { id: "setting-host-adapter-command", key: "host.adapter_command", label: "Adapter Command" },
+      { id: "setting-host-session-mode", key: "host.session_mode", label: "Session Mode" },
+      {
+        id: "setting-guard-max-turns",
+        key: "host.context_rot_guardrails.max_turns_per_role_session",
+        label: "Max Turns Per Role Session"
+      },
+      {
+        id: "setting-guard-max-age",
+        key: "host.context_rot_guardrails.max_session_age_minutes",
+        label: "Max Session Age (Minutes)"
+      },
+      {
+        id: "setting-guard-force-reload",
+        key: "host.context_rot_guardrails.force_reload_on_context_change",
+        label: "Force Reload On Context Change"
+      },
+      { id: "setting-execution-mode", key: "execution.mode", label: "Execution Mode" },
+      {
+        id: "setting-execution-handoff-authority",
+        key: "execution.handoff_authority",
+        label: "Handoff Authority"
+      },
+      {
+        id: "setting-execution-selection-policy",
+        key: "execution.selection_policy",
+        label: "Selection Policy"
+      },
+      {
+        id: "setting-execution-unexpected-event-policy",
+        key: "execution.unexpected_event_policy",
+        label: "Unexpected Event Policy"
+      },
+      { id: "setting-dashboard-output-file", key: "dashboard.output_file", label: "Dashboard Output File" },
+      {
+        id: "setting-dashboard-refresh-policy",
+        key: "dashboard.refresh_policy",
+        label: "Dashboard Refresh Policy"
+      },
+      {
+        id: "setting-dashboard-failure-mode",
+        key: "dashboard.failure_mode",
+        label: "Dashboard Failure Mode"
+      }
+    ];
 
     let activeTab = "project";
     let activeDocId = null;
@@ -476,6 +854,30 @@
       } catch (error) {
         return;
       }
+    }
+
+    function readOpenAgentGroups() {
+      const raw = safeStorageGet(STORAGE_KEYS.openAgentGroups);
+      if (!raw) {
+        return new Set();
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return new Set();
+        }
+        return new Set(
+          parsed
+            .map(value => String(value || "").trim())
+            .filter(value => value.length > 0)
+        );
+      } catch (error) {
+        return new Set();
+      }
+    }
+
+    function writeOpenAgentGroups(openGroups) {
+      safeStorageSet(STORAGE_KEYS.openAgentGroups, JSON.stringify(Array.from(openGroups)));
     }
 
     function roleColor(roleId) {
@@ -797,17 +1199,801 @@
       return "<dt>" + esc(label) + "</dt><dd>" + esc(value) + "</dd>";
     }
 
-    function chips(items) {
-      if (!items || !items.length) {
-        return '<span class="chip">None</span>';
+    function roleDisplayName(project, roleId) {
+      const map = (project && typeof project.role_display_names === "object")
+        ? project.role_display_names
+        : {};
+      const mapped = map[roleId];
+      if (mapped) {
+        return String(mapped);
       }
-      return items.map(item => '<span class="chip">' + esc(item) + "</span>").join("");
+      return String(roleId || "")
+        .replaceAll("-", " ")
+        .replaceAll("_", " ")
+        .replace(/\b\w/g, ch => ch.toUpperCase());
+    }
+
+    function roleDiscipline(roleId) {
+      const id = String(roleId || "").toLowerCase();
+      if (id === "operator") {
+        return "Operator";
+      }
+      if (
+        id.startsWith("designer-") ||
+        id.startsWith("ux-") ||
+        id.startsWith("design-") ||
+        id === "interaction-designer" ||
+        id === "information-architect"
+      ) {
+        return "Design & UX";
+      }
+      if (
+        id === "art-director" ||
+        id === "visual-designer" ||
+        id.endsWith("-artist") ||
+        id.startsWith("audio-") ||
+        id === "sound-designer" ||
+        id === "composer" ||
+        id === "voice-over-director"
+      ) {
+        return "Art & Audio";
+      }
+      if (
+        id === "product-manager" ||
+        id.endsWith("-spec-writer") ||
+        id === "nonfunctional-requirements-writer"
+      ) {
+        return "Product & Specifications";
+      }
+      if (
+        id.includes("architect") &&
+        id !== "information-architect"
+      ) {
+        return "Architecture";
+      }
+      if (id.startsWith("development-engineer-")) {
+        return "Engineering";
+      }
+      if (id === "qa-manager" || id.startsWith("qa-")) {
+        return "Quality Assurance";
+      }
+      if (id.startsWith("security-")) {
+        return "Security";
+      }
+      if (
+        id.startsWith("localization-") ||
+        id === "internationalization-engineer" ||
+        id === "translation-quality-manager" ||
+        id === "culturalization-specialist" ||
+        id === "audio-localization-engineer"
+      ) {
+        return "Localization";
+      }
+      if (id.startsWith("data-")) {
+        return "Data";
+      }
+      return "Custom Agents";
+    }
+
+    function compareRoleEntries(left, right) {
+      const nameCompare = left.display_name.localeCompare(right.display_name, undefined, {
+        sensitivity: "base",
+        numeric: true
+      });
+      if (nameCompare !== 0) {
+        return nameCompare;
+      }
+      return left.role_id.localeCompare(right.role_id, undefined, {
+        sensitivity: "base",
+        numeric: true
+      });
+    }
+
+    function groupedRoleEntries(roleEntries) {
+      const grouped = {};
+      let operatorEntry = null;
+
+      (roleEntries || []).forEach(entry => {
+        if (entry.role_id === "operator") {
+          operatorEntry = entry;
+          return;
+        }
+        const discipline = entry.discipline || "Custom Agents";
+        if (!grouped[discipline]) {
+          grouped[discipline] = [];
+        }
+        grouped[discipline].push(entry);
+      });
+
+      Object.keys(grouped).forEach(category => grouped[category].sort(compareRoleEntries));
+      const categories = Object.keys(grouped).sort((left, right) => {
+        const leftIsCustom = left === "Custom Agents";
+        const rightIsCustom = right === "Custom Agents";
+        if (leftIsCustom && !rightIsCustom) {
+          return -1;
+        }
+        if (!leftIsCustom && rightIsCustom) {
+          return 1;
+        }
+        return left.localeCompare(right, undefined, {
+          sensitivity: "base",
+          numeric: true
+        });
+      });
+
+      return { operatorEntry, grouped, categories };
+    }
+
+    function renderRoleStateToggle(entry) {
+      const enabled = Boolean(entry.enabled);
+      return (
+        '<button type="button" class="agent-state agent-state-toggle ' +
+        (enabled ? "enabled" : "disabled") +
+        '" data-role-toggle="true" data-role-id="' + esc(entry.role_id) +
+        '" aria-pressed="' + (enabled ? "true" : "false") + '">' +
+        (enabled ? "Enabled" : "Disabled") +
+        "</button>"
+      );
+    }
+
+    function renderRoleEntry(entry) {
+      return [
+        "<li>",
+        '<span class="agent-name">' + esc(entry.display_name) + "</span>",
+        '<span class="agent-role-id">' + esc(entry.role_id) + "</span>",
+        renderRoleStateToggle(entry),
+        "</li>"
+      ].join("");
+    }
+
+    function renderProjectAgentDirectory(project) {
+      const allRoleIds = PROJECT_ROLE_IDS.slice();
+      const roleEntries = allRoleIds.map(roleId => ({
+        role_id: roleId,
+        display_name: roleDisplayName(project, roleId),
+        enabled: Boolean(CURRENT_ROLE_SELECTION[roleId]),
+        discipline: roleDiscipline(roleId)
+      }));
+
+      roleEntries.sort(compareRoleEntries);
+      const { operatorEntry, grouped, categories } = groupedRoleEntries(roleEntries);
+
+      const blocks = [];
+      if (operatorEntry) {
+        blocks.push(
+          '<div class="operator-entry">' +
+            '<span class="agent-name">' + esc(operatorEntry.display_name) + "</span>" +
+            '<span class="agent-role-id">' + esc(operatorEntry.role_id) + "</span>" +
+            renderRoleStateToggle(operatorEntry) +
+          "</div>"
+        );
+      }
+      blocks.push('<div class="discipline-groups" id="project-agent-directory">');
+      categories.forEach(category => {
+        const entries = grouped[category] || [];
+        const roleIds = entries.map(entry => entry.role_id).join(",");
+        blocks.push(
+          '<details class="discipline-group">' +
+            '<summary>' + esc(category) + " (" + entries.length + ")</summary>" +
+            '<div class="discipline-group-actions">' +
+              '<button type="button" class="discipline-action-btn" data-group-action="enable" data-role-ids="' + esc(roleIds) + '">Enable All</button>' +
+              '<button type="button" class="discipline-action-btn" data-group-action="disable" data-role-ids="' + esc(roleIds) + '">Disable All</button>' +
+            "</div>" +
+            '<ul class="discipline-agent-list">' +
+              entries.map(renderRoleEntry).join("") +
+            "</ul>" +
+          "</details>"
+        );
+      });
+      if (!categories.length) {
+        blocks.push('<p class="empty">No non-operator roles configured.</p>');
+      }
+      blocks.push("</div>");
+      return blocks.join("");
+    }
+
+    function optionListHtml(options, currentValue) {
+      const allowed = Array.isArray(options) ? options.slice() : [];
+      const allowedSet = new Set(allowed);
+      const current = String(currentValue ?? "").trim();
+      if (current && !allowedSet.has(current)) {
+        allowed.unshift(current);
+      }
+      return allowed.map(value => {
+        const selected = value === current ? " selected" : "";
+        const isUnknown = !allowedSet.has(value);
+        const label = isUnknown ? value + " (unsupported)" : value;
+        return '<option value="' + esc(value) + '"' + selected + ">" + esc(label) + "</option>";
+      }).join("");
+    }
+
+    function renderProjectSettings(projectSettings) {
+      const host = (projectSettings && projectSettings.host) ? projectSettings.host : {};
+      const guard = (host && host.context_rot_guardrails) ? host.context_rot_guardrails : {};
+      const execution = (projectSettings && projectSettings.execution) ? projectSettings.execution : {};
+      const dashboard = (projectSettings && projectSettings.dashboard) ? projectSettings.dashboard : {};
+      const maxTurns = Number.isInteger(Number(guard.max_turns_per_role_session))
+        ? Number(guard.max_turns_per_role_session)
+        : 8;
+      const maxAge = Number.isInteger(Number(guard.max_session_age_minutes))
+        ? Number(guard.max_session_age_minutes)
+        : 240;
+      const forceReload = String(Boolean(guard.force_reload_on_context_change));
+
+      return [
+        '<section class="project-settings">',
+        "<h3>Project Settings</h3>",
+        '<div class="settings-grid">',
+
+        '<div class="settings-field">',
+        '<label for="setting-host-primary-adapter">Primary Adapter</label>',
+        '<select id="setting-host-primary-adapter">' +
+          optionListHtml(SETTINGS_OPTIONS.hostPrimaryAdapter, host.primary_adapter) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>host.primary_adapter</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-host-adapter-command">Adapter Command</label>',
+        '<input id="setting-host-adapter-command" type="text" required value="' + esc(String(host.adapter_command || "")) + '">',
+        '<div class="settings-hint">Config key: <code>host.adapter_command</code> (required).</div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-host-session-mode">Session Mode</label>',
+        '<select id="setting-host-session-mode">' +
+          optionListHtml(SETTINGS_OPTIONS.hostSessionMode, host.session_mode) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>host.session_mode</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-guard-max-turns">Max Turns Per Role Session</label>',
+        '<input id="setting-guard-max-turns" type="number" min="1" step="1" required value="' + esc(String(maxTurns)) + '">',
+        '<div class="settings-hint">Config key: <code>host.context_rot_guardrails.max_turns_per_role_session</code> (integer > 0).</div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-guard-max-age">Max Session Age (Minutes)</label>',
+        '<input id="setting-guard-max-age" type="number" min="1" step="1" required value="' + esc(String(maxAge)) + '">',
+        '<div class="settings-hint">Config key: <code>host.context_rot_guardrails.max_session_age_minutes</code> (integer > 0).</div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-guard-force-reload">Force Reload On Context Change</label>',
+        '<select id="setting-guard-force-reload">' +
+          optionListHtml(SETTINGS_OPTIONS.boolValues, forceReload) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>host.context_rot_guardrails.force_reload_on_context_change</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-execution-mode">Execution Mode</label>',
+        '<select id="setting-execution-mode">' +
+          optionListHtml(SETTINGS_OPTIONS.executionMode, execution.mode) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>execution.mode</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-execution-handoff-authority">Handoff Authority</label>',
+        '<select id="setting-execution-handoff-authority">' +
+          optionListHtml(SETTINGS_OPTIONS.executionHandoffAuthority, execution.handoff_authority) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>execution.handoff_authority</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-execution-selection-policy">Selection Policy</label>',
+        '<select id="setting-execution-selection-policy">' +
+          optionListHtml(SETTINGS_OPTIONS.executionSelectionPolicy, execution.selection_policy) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>execution.selection_policy</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-execution-unexpected-event-policy">Unexpected Event Policy</label>',
+        '<select id="setting-execution-unexpected-event-policy">' +
+          optionListHtml(SETTINGS_OPTIONS.executionUnexpectedEventPolicy, execution.unexpected_event_policy) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>execution.unexpected_event_policy</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-dashboard-output-file">Dashboard Output File</label>',
+        '<input id="setting-dashboard-output-file" type="text" required value="' + esc(String(dashboard.output_file || "")) + '">',
+        '<div class="settings-hint">Config key: <code>dashboard.output_file</code> (required path).</div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-dashboard-refresh-policy">Dashboard Refresh Policy</label>',
+        '<select id="setting-dashboard-refresh-policy">' +
+          optionListHtml(SETTINGS_OPTIONS.dashboardRefreshPolicy, dashboard.refresh_policy) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>dashboard.refresh_policy</code></div>',
+        "</div>",
+
+        '<div class="settings-field">',
+        '<label for="setting-dashboard-failure-mode">Dashboard Failure Mode</label>',
+        '<select id="setting-dashboard-failure-mode">' +
+          optionListHtml(SETTINGS_OPTIONS.dashboardFailureMode, dashboard.failure_mode) +
+        "</select>",
+        '<div class="settings-hint">Config key: <code>dashboard.failure_mode</code></div>',
+        "</div>",
+
+        "</div>",
+        '<div id="project-settings-validation" class="settings-validation"></div>',
+        '<div id="project-settings-prompt" class="settings-prompt"></div>',
+        "</section>"
+      ].join("");
+    }
+
+    function settingValue(id) {
+      const element = document.getElementById(id);
+      if (!element) {
+        return "";
+      }
+      return String(element.value ?? "").trim();
+    }
+
+    function integerValueOrRaw(id) {
+      const raw = settingValue(id);
+      const parsed = Number(raw);
+      return Number.isInteger(parsed) ? parsed : raw;
+    }
+
+    function booleanFromSelect(value) {
+      return String(value).trim().toLowerCase() === "true";
+    }
+
+    function buildSettingsSnapshotFromData(projectSettings) {
+      const host = (projectSettings && projectSettings.host) ? projectSettings.host : {};
+      const guard = (host && host.context_rot_guardrails) ? host.context_rot_guardrails : {};
+      const execution = (projectSettings && projectSettings.execution) ? projectSettings.execution : {};
+      const dashboard = (projectSettings && projectSettings.dashboard) ? projectSettings.dashboard : {};
+      const maxTurns = Number(guard.max_turns_per_role_session);
+      const maxAge = Number(guard.max_session_age_minutes);
+      const forceReloadRaw = guard.force_reload_on_context_change;
+      return {
+        "host.primary_adapter": String(host.primary_adapter || "").trim(),
+        "host.adapter_command": String(host.adapter_command || "").trim(),
+        "host.session_mode": String(host.session_mode || "per-role-threads").trim() || "per-role-threads",
+        "host.context_rot_guardrails.max_turns_per_role_session": Number.isInteger(maxTurns) ? maxTurns : 8,
+        "host.context_rot_guardrails.max_session_age_minutes": Number.isInteger(maxAge) ? maxAge : 240,
+        "host.context_rot_guardrails.force_reload_on_context_change": (
+          typeof forceReloadRaw === "boolean" ? forceReloadRaw : booleanFromSelect(forceReloadRaw)
+        ),
+        "execution.mode": String(execution.mode || "sequential").trim() || "sequential",
+        "execution.handoff_authority": String(execution.handoff_authority || "operator-mediated").trim()
+          || "operator-mediated",
+        "execution.selection_policy": String(execution.selection_policy || "dependency-fifo").trim()
+          || "dependency-fifo",
+        "execution.unexpected_event_policy": String(execution.unexpected_event_policy || "errors-only").trim()
+          || "errors-only",
+        "dashboard.output_file": String(dashboard.output_file || "project/state/dashboard.html").trim()
+          || "project/state/dashboard.html",
+        "dashboard.refresh_policy": String(dashboard.refresh_policy || "after-every-step").trim()
+          || "after-every-step",
+        "dashboard.failure_mode": String(dashboard.failure_mode || "non-blocking-log").trim()
+          || "non-blocking-log"
+      };
+    }
+
+    function buildSettingsSnapshotFromUI() {
+      return {
+        "host.primary_adapter": settingValue("setting-host-primary-adapter"),
+        "host.adapter_command": settingValue("setting-host-adapter-command"),
+        "host.session_mode": settingValue("setting-host-session-mode"),
+        "host.context_rot_guardrails.max_turns_per_role_session": integerValueOrRaw("setting-guard-max-turns"),
+        "host.context_rot_guardrails.max_session_age_minutes": integerValueOrRaw("setting-guard-max-age"),
+        "host.context_rot_guardrails.force_reload_on_context_change": booleanFromSelect(
+          settingValue("setting-guard-force-reload")
+        ),
+        "execution.mode": settingValue("setting-execution-mode"),
+        "execution.handoff_authority": settingValue("setting-execution-handoff-authority"),
+        "execution.selection_policy": settingValue("setting-execution-selection-policy"),
+        "execution.unexpected_event_policy": settingValue("setting-execution-unexpected-event-policy"),
+        "dashboard.output_file": settingValue("setting-dashboard-output-file"),
+        "dashboard.refresh_policy": settingValue("setting-dashboard-refresh-policy"),
+        "dashboard.failure_mode": settingValue("setting-dashboard-failure-mode")
+      };
+    }
+
+    function sortRoleIds(roleIds) {
+      return (roleIds || []).slice().sort((left, right) => {
+        const leftId = String(left || "");
+        const rightId = String(right || "");
+        const leftIsOperator = leftId === "operator";
+        const rightIsOperator = rightId === "operator";
+        if (leftIsOperator && !rightIsOperator) {
+          return -1;
+        }
+        if (!leftIsOperator && rightIsOperator) {
+          return 1;
+        }
+        return leftId.localeCompare(rightId, undefined, {
+          sensitivity: "base",
+          numeric: true
+        });
+      });
+    }
+
+    const PROJECT_ROLE_IDS = sortRoleIds(Array.from(new Set([
+      ...(DATA.project.enabled_roles || []),
+      ...(DATA.project.disabled_roles || []),
+      ...((DATA.agents || []).map(agent => String(agent.role_id || "").trim()).filter(Boolean))
+    ])));
+
+    function buildRoleSelectionFromProject(project) {
+      const enabledSet = new Set(project.enabled_roles || []);
+      const disabledSet = new Set(project.disabled_roles || []);
+      const selection = {};
+      PROJECT_ROLE_IDS.forEach(roleId => {
+        selection[roleId] = enabledSet.has(roleId) && !disabledSet.has(roleId);
+      });
+      return selection;
+    }
+
+    function roleSelectionSnapshot(selection) {
+      const enabled = [];
+      const disabled = [];
+      PROJECT_ROLE_IDS.forEach(roleId => {
+        if (selection[roleId]) {
+          enabled.push(roleId);
+        } else {
+          disabled.push(roleId);
+        }
+      });
+      return {
+        enabled: sortRoleIds(enabled),
+        disabled: sortRoleIds(disabled)
+      };
+    }
+
+    function roleSelectionChanges(beforeSelection, afterSelection) {
+      const changedRoles = PROJECT_ROLE_IDS
+        .filter(roleId => Boolean(beforeSelection[roleId]) !== Boolean(afterSelection[roleId]))
+        .map(roleId => ({
+          role_id: roleId,
+          display_name: roleDisplayName(DATA.project, roleId),
+          from_enabled: Boolean(beforeSelection[roleId]),
+          to_enabled: Boolean(afterSelection[roleId])
+        }))
+        .sort((left, right) => compareRoleEntries(
+          { display_name: left.display_name, role_id: left.role_id },
+          { display_name: right.display_name, role_id: right.role_id }
+        ));
+
+      const afterSnapshot = roleSelectionSnapshot(afterSelection);
+      return {
+        hasChanges: changedRoles.length > 0,
+        changedRoles: changedRoles,
+        enabledRoles: afterSnapshot.enabled,
+        disabledRoles: afterSnapshot.disabled
+      };
+    }
+
+    const INITIAL_SETTINGS_SNAPSHOT = buildSettingsSnapshotFromData(DATA.settings || {});
+    const INITIAL_ROLE_SELECTION = buildRoleSelectionFromProject(DATA.project);
+    let CURRENT_ROLE_SELECTION = Object.assign({}, INITIAL_ROLE_SELECTION);
+
+    function settingsChangesFromSnapshots(before, after) {
+      const specsByKey = {};
+      SETTINGS_FIELD_SPECS.forEach(spec => {
+        specsByKey[spec.key] = spec;
+      });
+      const keys = Object.keys(before);
+      const changes = [];
+      keys.forEach(key => {
+        const oldValue = before[key];
+        const newValue = after[key];
+        const changed = (
+          typeof oldValue === "number" || typeof newValue === "number" ||
+          typeof oldValue === "boolean" || typeof newValue === "boolean"
+        )
+          ? oldValue !== newValue
+          : String(oldValue ?? "") !== String(newValue ?? "");
+        if (!changed) {
+          return;
+        }
+        const spec = specsByKey[key];
+        changes.push({
+          key: key,
+          label: spec ? spec.label : key,
+          from: oldValue,
+          to: newValue
+        });
+      });
+      return changes;
+    }
+
+    function toYamlScalar(value) {
+      if (typeof value === "boolean") {
+        return value ? "true" : "false";
+      }
+      if (typeof value === "number") {
+        return String(value);
+      }
+      const text = String(value ?? "");
+      if (!text) {
+        return '""';
+      }
+      const simpleToken = /^[A-Za-z0-9._\-/]+$/.test(text);
+      const lowered = text.toLowerCase();
+      if (simpleToken && lowered !== "true" && lowered !== "false" && lowered !== "null") {
+        return text;
+      }
+      return JSON.stringify(text);
+    }
+
+    function toYamlFlowList(values) {
+      if (!Array.isArray(values) || !values.length) {
+        return "[]";
+      }
+      return "[" + values.map(value => toYamlScalar(String(value))).join(", ") + "]";
+    }
+
+    function buildOperatorSettingsPrompt(changes, roleChanges, hasValidationErrors) {
+      const lines = [];
+      lines.push("Update project settings in `project/config/project.yaml`.");
+      if (hasValidationErrors) {
+        lines.push("Validation warning: one or more values are currently invalid in the dashboard.");
+        lines.push("Fix validation issues before submitting this request.");
+      }
+      lines.push("");
+      lines.push("[ALLOW-GOVERNANCE-EDITS]");
+      lines.push("governance_file_edits_approved: true");
+      lines.push("");
+      lines.push("Apply these settings exactly:");
+      changes.forEach(change => {
+        lines.push(change.key + ": " + toYamlScalar(change.to));
+      });
+      if (roleChanges && roleChanges.hasChanges) {
+        lines.push("roles.enabled: " + toYamlFlowList(roleChanges.enabledRoles));
+        lines.push("roles.disabled: " + toYamlFlowList(roleChanges.disabledRoles));
+      }
+      if (!changes.length && !(roleChanges && roleChanges.hasChanges)) {
+        lines.push("# No changes detected.");
+      }
+      if (roleChanges && roleChanges.hasChanges) {
+        lines.push("");
+        lines.push("Requested role state updates:");
+        roleChanges.changedRoles.forEach(change => {
+          const stateText = change.to_enabled ? "Enabled" : "Disabled";
+          lines.push("- " + change.role_id + " (" + change.display_name + "): " + stateText);
+        });
+      }
+      lines.push("");
+      lines.push("After applying updates:");
+      lines.push("1. Run `python -m runner.orchestrator validate`");
+      lines.push("2. Run `python -m runner.orchestrator render-dashboard`");
+      lines.push("3. Summarize the settings changed and confirm completion.");
+      return lines.join("\n");
+    }
+
+    function renderOperatorSettingsPrompt(changes, roleChanges, errors) {
+      const root = document.getElementById("project-settings-prompt");
+      if (!root) {
+        return;
+      }
+      const hasRoleChanges = Boolean(roleChanges && roleChanges.hasChanges);
+      if (!changes.length && !hasRoleChanges) {
+        root.innerHTML = [
+          "<h4>Prompt for Operator</h4>",
+          '<p class="settings-hint">No settings or role-state changes detected. Edit settings or toggle agent states to generate a prompt for Operator.</p>'
+        ].join("");
+        return;
+      }
+
+      const hasValidationErrors = Array.isArray(errors) && errors.length > 0;
+      root.innerHTML = [
+        "<h4>Prompt for Operator</h4>",
+        '<p class="settings-hint">Copy/paste this prompt into the Operator chat to apply your configuration changes.</p>',
+        '<textarea id="project-settings-prompt-text" readonly></textarea>',
+        '<div class="settings-prompt-actions">',
+        '<button type="button" class="settings-copy-btn" id="project-settings-copy-btn">Copy Prompt</button>',
+        '<span class="settings-copy-status" id="project-settings-copy-status"></span>',
+        "</div>"
+      ].join("");
+
+      const promptText = buildOperatorSettingsPrompt(changes, roleChanges, hasValidationErrors);
+      const textArea = document.getElementById("project-settings-prompt-text");
+      const copyButton = document.getElementById("project-settings-copy-btn");
+      const copyStatus = document.getElementById("project-settings-copy-status");
+      if (textArea) {
+        textArea.value = promptText;
+      }
+      if (copyButton) {
+        if (hasValidationErrors) {
+          copyButton.disabled = true;
+        }
+        copyButton.addEventListener("click", async () => {
+          if (hasValidationErrors || !textArea) {
+            return;
+          }
+          try {
+            await navigator.clipboard.writeText(textArea.value);
+            if (copyStatus) {
+              copyStatus.textContent = "Prompt copied.";
+            }
+          } catch (error) {
+            if (copyStatus) {
+              copyStatus.textContent = "Copy failed. Select and copy manually.";
+            }
+          }
+        });
+      }
+      if (copyStatus) {
+        copyStatus.textContent = hasValidationErrors
+          ? "Resolve validation issues above before sending this prompt."
+          : "Ready to copy.";
+      }
+    }
+
+    function parseRoleIdList(value) {
+      return String(value || "")
+        .split(",")
+        .map(roleId => roleId.trim())
+        .filter(roleId => roleId.length > 0 && PROJECT_ROLE_IDS.includes(roleId));
+    }
+
+    function applyRoleToggleButtonState(button, enabled) {
+      button.classList.remove("enabled", "disabled");
+      button.classList.add(enabled ? "enabled" : "disabled");
+      button.textContent = enabled ? "Enabled" : "Disabled";
+      button.setAttribute("aria-pressed", enabled ? "true" : "false");
+    }
+
+    function refreshProjectRoleToggleStates() {
+      const root = document.getElementById("project-content");
+      if (!root) {
+        return;
+      }
+      root.querySelectorAll("[data-role-toggle][data-role-id]").forEach(button => {
+        const roleId = String(button.getAttribute("data-role-id") || "").trim();
+        if (!roleId) {
+          return;
+        }
+        applyRoleToggleButtonState(button, Boolean(CURRENT_ROLE_SELECTION[roleId]));
+      });
+    }
+
+    function wireProjectRoleControls() {
+      const root = document.getElementById("project-content");
+      if (!root) {
+        return;
+      }
+      root.querySelectorAll("[data-role-toggle][data-role-id]").forEach(button => {
+        button.addEventListener("click", () => {
+          const roleId = String(button.getAttribute("data-role-id") || "").trim();
+          if (!roleId || !PROJECT_ROLE_IDS.includes(roleId)) {
+            return;
+          }
+          CURRENT_ROLE_SELECTION[roleId] = !Boolean(CURRENT_ROLE_SELECTION[roleId]);
+          refreshProjectRoleToggleStates();
+          validateProjectSettingsUI();
+        });
+      });
+      root.querySelectorAll("[data-group-action][data-role-ids]").forEach(button => {
+        button.addEventListener("click", () => {
+          const action = String(button.getAttribute("data-group-action") || "").trim().toLowerCase();
+          const nextEnabled = action === "enable";
+          const roleIds = parseRoleIdList(button.getAttribute("data-role-ids"));
+          if (!roleIds.length) {
+            return;
+          }
+          roleIds.forEach(roleId => {
+            CURRENT_ROLE_SELECTION[roleId] = nextEnabled;
+          });
+          refreshProjectRoleToggleStates();
+          validateProjectSettingsUI();
+        });
+      });
+      refreshProjectRoleToggleStates();
+    }
+
+    function validateProjectSettingsUI() {
+      const errors = [];
+      const primaryAdapter = settingValue("setting-host-primary-adapter");
+      if (!SETTINGS_OPTIONS.hostPrimaryAdapter.includes(primaryAdapter)) {
+        errors.push("Primary Adapter must be one of the supported adapter IDs.");
+      }
+
+      const adapterCommand = settingValue("setting-host-adapter-command");
+      if (!adapterCommand) {
+        errors.push("Adapter Command must be a non-empty string.");
+      }
+
+      const sessionMode = settingValue("setting-host-session-mode");
+      if (!SETTINGS_OPTIONS.hostSessionMode.includes(sessionMode)) {
+        errors.push("Session Mode must be per-role-threads or stateless.");
+      }
+
+      const turnsRaw = settingValue("setting-guard-max-turns");
+      const turns = Number(turnsRaw);
+      if (!Number.isInteger(turns) || turns <= 0) {
+        errors.push("Max Turns Per Role Session must be an integer greater than 0.");
+      }
+
+      const ageRaw = settingValue("setting-guard-max-age");
+      const age = Number(ageRaw);
+      if (!Number.isInteger(age) || age <= 0) {
+        errors.push("Max Session Age must be an integer greater than 0.");
+      }
+
+      const forceReload = settingValue("setting-guard-force-reload");
+      if (!SETTINGS_OPTIONS.boolValues.includes(forceReload)) {
+        errors.push("Force Reload On Context Change must be true or false.");
+      }
+
+      const executionMode = settingValue("setting-execution-mode");
+      if (!SETTINGS_OPTIONS.executionMode.includes(executionMode)) {
+        errors.push("Execution Mode must be sequential.");
+      }
+
+      const handoffAuthority = settingValue("setting-execution-handoff-authority");
+      if (!SETTINGS_OPTIONS.executionHandoffAuthority.includes(handoffAuthority)) {
+        errors.push("Handoff Authority must be operator-mediated.");
+      }
+
+      const selectionPolicy = settingValue("setting-execution-selection-policy");
+      if (!SETTINGS_OPTIONS.executionSelectionPolicy.includes(selectionPolicy)) {
+        errors.push("Selection Policy must be dependency-fifo.");
+      }
+
+      const unexpectedPolicy = settingValue("setting-execution-unexpected-event-policy");
+      if (!SETTINGS_OPTIONS.executionUnexpectedEventPolicy.includes(unexpectedPolicy)) {
+        errors.push("Unexpected Event Policy must be errors-only, errors-or-warnings, or proceed.");
+      }
+
+      const dashboardOutput = settingValue("setting-dashboard-output-file");
+      if (!dashboardOutput) {
+        errors.push("Dashboard Output File must be a non-empty path.");
+      }
+
+      const refreshPolicy = settingValue("setting-dashboard-refresh-policy");
+      if (!SETTINGS_OPTIONS.dashboardRefreshPolicy.includes(refreshPolicy)) {
+        errors.push("Dashboard Refresh Policy must be after-every-step.");
+      }
+
+      const failureMode = settingValue("setting-dashboard-failure-mode");
+      if (!SETTINGS_OPTIONS.dashboardFailureMode.includes(failureMode)) {
+        errors.push("Dashboard Failure Mode must be non-blocking-log.");
+      }
+
+      const validation = document.getElementById("project-settings-validation");
+      if (validation) {
+        if (!errors.length) {
+          validation.className = "settings-validation ok";
+          validation.innerHTML = "Settings values satisfy current dashboard constraints.";
+        } else {
+          validation.className = "settings-validation error";
+          validation.innerHTML = "<strong>Validation issues:</strong><ul class=\"settings-errors\">" +
+            errors.map(error => "<li>" + esc(error) + "</li>").join("") +
+            "</ul>";
+        }
+      }
+
+      const currentSnapshot = buildSettingsSnapshotFromUI();
+      const changes = settingsChangesFromSnapshots(INITIAL_SETTINGS_SNAPSHOT, currentSnapshot);
+      const roleChanges = roleSelectionChanges(INITIAL_ROLE_SELECTION, CURRENT_ROLE_SELECTION);
+      renderOperatorSettingsPrompt(changes, roleChanges, errors);
+    }
+
+    function wireProjectSettingsValidation() {
+      SETTINGS_FIELD_SPECS.forEach(spec => {
+        const element = document.getElementById(spec.id);
+        if (!element) {
+          return;
+        }
+        const eventName = element.tagName === "SELECT" ? "change" : "input";
+        element.addEventListener(eventName, validateProjectSettingsUI);
+      });
+      validateProjectSettingsUI();
     }
 
     function renderProject() {
       const project = DATA.project;
-      const statusEntries = Object.entries(project.status_counts || {});
-      const statusChips = statusEntries.map(([key, value]) => key + ": " + value);
       const html = [
         '<div class="cards">',
         '<section class="card"><h3>Project</h3><dl class="kv">',
@@ -824,26 +2010,16 @@
         kvRow("Enabled Roles", project.enabled_roles.length),
         kvRow("Disabled Roles", project.disabled_roles.length),
         "</dl></section>",
-        '<section class="card"><h3>Run State</h3><dl class="kv">',
-        kvRow("Run ID", project.state.run_id || "n/a"),
-        kvRow("Current Request", project.state.current_request || "n/a"),
-        kvRow("Active Role", project.state.active_role || "n/a"),
-        kvRow("Last Completed Task", project.state.last_completed_task_id || "n/a"),
-        kvRow("Halted", project.state.halted ? "Yes" : "No"),
-        kvRow("Halt Reason", project.state.halt_reason || "n/a"),
-        "</dl></section>",
-        '<section class="card"><h3>Backlog Status Counts</h3><div class="chip-list">',
-        chips(statusChips),
-        "</div></section>",
-        '<section class="card"><h3>Enabled Agents</h3><div class="chip-list">',
-        chips(project.enabled_roles),
-        "</div></section>",
-        '<section class="card"><h3>Disabled Agents</h3><div class="chip-list">',
-        chips(project.disabled_roles),
-        "</div></section>",
-        "</div>"
+        "</div>",
+        '<section class="project-agents">',
+        "<h3>Agents By Discipline</h3>",
+        renderProjectAgentDirectory(project),
+        "</section>",
+        renderProjectSettings(DATA.settings || {})
       ].join("");
       document.getElementById("project-content").innerHTML = html;
+      wireProjectRoleControls();
+      wireProjectSettingsValidation();
     }
 
     function renderDocuments() {
@@ -985,27 +2161,93 @@
       ].join("");
     }
 
+    function buildAgentTabButton(entry) {
+      const button = document.createElement("button");
+      button.className = "agent-tab" + (entry.role_id === activeAgentId ? " active" : "");
+      button.style.borderLeft = "6px solid " + entry.color;
+      const label = document.createElement("span");
+      label.className = "agent-tab-label";
+      label.textContent = entry.display_name;
+      const statusDot = document.createElement("span");
+      statusDot.className = "agent-status-dot " + (entry.enabled ? "enabled" : "disabled");
+      statusDot.setAttribute("aria-label", entry.enabled ? "Enabled" : "Disabled");
+      statusDot.title = entry.enabled ? "Enabled" : "Disabled";
+      button.appendChild(label);
+      button.appendChild(statusDot);
+      button.onclick = () => {
+        activeAgentId = entry.role_id;
+        renderAgents();
+      };
+      return button;
+    }
+
     function renderAgents() {
       const tabs = document.getElementById("agent-tabs");
-      const agents = DATA.agents || [];
+      const enabledSet = new Set(DATA.project.enabled_roles || []);
+      const disabledSet = new Set(DATA.project.disabled_roles || []);
+      const agents = (DATA.agents || []).slice();
+      const roleEntries = agents.map(agent => {
+        const roleId = String(agent.role_id || "");
+        const isEnabled = typeof agent.enabled === "boolean"
+          ? agent.enabled
+          : (enabledSet.has(roleId) && !disabledSet.has(roleId));
+        return {
+          role_id: roleId,
+          display_name: String(agent.display_name || roleDisplayName(DATA.project, roleId)),
+          color: String(agent.color || roleColor(roleId)),
+          enabled: isEnabled,
+          discipline: roleDiscipline(roleId)
+        };
+      });
+      roleEntries.sort(compareRoleEntries);
+      const { operatorEntry, grouped, categories } = groupedRoleEntries(roleEntries);
+      const openGroups = readOpenAgentGroups();
       tabs.innerHTML = "";
-      if (!agents.length) {
-        document.getElementById("agent-panel").innerHTML = '<p class="empty">No enabled agents.</p>';
+      if (!roleEntries.length) {
+        document.getElementById("agent-panel").innerHTML = '<p class="empty">No agents found.</p>';
         return;
       }
-      if (!activeAgentId || !agents.some(agent => agent.role_id === activeAgentId)) {
-        activeAgentId = agents[0].role_id;
+      const orderedRoleIds = [];
+      if (operatorEntry) {
+        orderedRoleIds.push(operatorEntry.role_id);
       }
-      agents.forEach(agent => {
-        const button = document.createElement("button");
-        button.className = "agent-tab" + (agent.role_id === activeAgentId ? " active" : "");
-        button.style.borderLeft = "6px solid " + agent.color;
-        button.textContent = agent.display_name;
-        button.onclick = () => {
-          activeAgentId = agent.role_id;
-          renderAgents();
-        };
-        tabs.appendChild(button);
+      categories.forEach(category => {
+        (grouped[category] || []).forEach(entry => orderedRoleIds.push(entry.role_id));
+      });
+      if (!activeAgentId || !orderedRoleIds.includes(activeAgentId)) {
+        activeAgentId = orderedRoleIds[0];
+      }
+
+      if (operatorEntry) {
+        tabs.appendChild(buildAgentTabButton(operatorEntry));
+      }
+      categories.forEach(category => {
+        const entries = grouped[category] || [];
+        if (!entries.length) {
+          return;
+        }
+        const section = document.createElement("details");
+        section.className = "agent-tab-group";
+        section.open = openGroups.has(category);
+        const heading = document.createElement("summary");
+        heading.className = "agent-tab-group-title";
+        heading.textContent = category + " (" + entries.length + ")";
+        section.appendChild(heading);
+        const body = document.createElement("div");
+        body.className = "agent-tab-group-body";
+        entries.forEach(entry => {
+          body.appendChild(buildAgentTabButton(entry));
+        });
+        section.appendChild(body);
+        section.addEventListener("toggle", () => {
+          if (section.open) {
+            openGroups.add(category);
+          } else {
+            openGroups.delete(category);
+          }
+          writeOpenAgentGroups(openGroups);
+        });
+        tabs.appendChild(section);
       });
       const active = agents.find(agent => agent.role_id === activeAgentId) || agents[0];
       renderAgentPanel(active);
